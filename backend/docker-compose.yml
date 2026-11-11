@@ -3,6 +3,7 @@ services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
+    mem_limit: 512m
     environment:
       POSTGRES_DB: whosefault
       POSTGRES_USER: ${DB_USER}
@@ -21,6 +22,8 @@ services:
   api:
     build: .
     restart: unless-stopped
+    # 고해야지와 같은 서버를 쓰므로 메모리 상한을 둔다. JVM은 이 값의 75%를 힙으로 쓴다
+    mem_limit: ${API_MEM_LIMIT:-768m}
     depends_on:
       db:
         condition: service_healthy

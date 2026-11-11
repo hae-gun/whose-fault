@@ -840,7 +840,7 @@ $('qSubmit').onclick=()=>{
   setHint('');
   $('qNext').onclick=()=>{quiz.i++;if(quiz.i>=quiz.order.length)quizEnd();else{quizRender();window.scrollTo({top:0,behavior:'smooth'});}};
 };
-const SHARE_BASE='https://nobody-asked.dev/whose-fault/';
+const SHARE_BASE='https://whose-fault.nobody-asked.dev/';
 const GRADES=[
   {slug:'ace',min:.9,badge:'S등급',name:'보험사 에이스 손해사정사',tag:'블랙박스 영상만 봐도 몇 대 몇이 보이는 사람'},
   {slug:'veteran',min:.7,badge:'A등급',name:'베테랑 운전자',tag:'웬만한 사고는 보자마자 판결 끝'},

@@ -5,6 +5,7 @@
 ## 서비스
 
 - 이름: 몇 대 몇? (코드명 whose-fault). nobody-asked.dev 계열 서비스
+- 주소: https://whose-fault.nobody-asked.dev (GitHub Pages + CNAME, DNS는 Cloudflare), API 예정 주소 https://whose-fault-api.nobody-asked.dev
 - 목표: 사람들이 사고 영상을 보고 직감으로 투표하고, 기준표와의 차이를 두고 댓글로 토론하면서 트래픽이 생기는 것
 - 대부분의 사용자는 과실 기준을 모르고 직감으로 투표한다고 가정한다. 직감과 기준의 차이가 토론거리다
 - 유입 장치: 퀴즈 결과를 등급별 공유 페이지(r/*.html)로 카톡에 공유

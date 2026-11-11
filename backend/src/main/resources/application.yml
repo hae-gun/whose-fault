@@ -29,6 +29,6 @@ management:
 whosefault:
   token-secret: ${TOKEN_SECRET:}
   admin-token: ${ADMIN_TOKEN:}
-  allowed-origins: ${ALLOWED_ORIGINS:https://nobody-asked.dev,http://localhost:8000,http://127.0.0.1:8000}
+  allowed-origins: ${ALLOWED_ORIGINS:https://whose-fault.nobody-asked.dev,http://localhost:8000,http://127.0.0.1:8000}
   trust-proxy-headers: ${TRUST_PROXY_HEADERS:false}
   hide-at-reports: 3

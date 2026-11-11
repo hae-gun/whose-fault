@@ -2,7 +2,7 @@
 
 자동차 사고 과실비율을 맞히고, 직접 사고를 그려 보고, 사람들과 판결을 두고 토론하는 웹 게임입니다.
 
-배포 주소(예정): https://nobody-asked.dev/whose-fault/
+배포 주소: https://whose-fault.nobody-asked.dev/ (GitHub Pages, 루트의 `CNAME` 파일로 연결)
 
 ## 기능
 

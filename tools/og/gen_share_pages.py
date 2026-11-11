@@ -3,7 +3,7 @@
 import json,html,os
 HERE=os.path.dirname(os.path.abspath(__file__))
 ROOT=os.path.abspath(os.path.join(HERE,'..','..'))
-BASE='https://nobody-asked.dev/whose-fault/'
+BASE='https://whose-fault.nobody-asked.dev/'
 G=json.load(open(os.path.join(HERE,'grades.json'),encoding='utf-8'))
 T='''<!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8">

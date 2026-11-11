@@ -142,3 +142,5 @@ details.stddet summary{cursor:pointer;font-size:13px;font-weight:700}
 .rowmini{display:flex;gap:6px;justify-content:flex-end;margin-top:10px}
 .rpanel{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;padding:10px;background:var(--soft);border-radius:10px}
 .aitem{padding:10px 0;border-bottom:1px solid var(--soft)}
+.soundbtn{position:absolute;left:12px;bottom:12px;border:0;background:rgba(255,255,255,.92);border-radius:999px;padding:7px 12px;font:700 12px 'Noto Sans KR';color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.12);cursor:pointer}
+.soundbtn.off{color:var(--sub);background:rgba(255,255,255,.75)}

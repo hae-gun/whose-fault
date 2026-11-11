@@ -484,10 +484,64 @@ function resize(){const w=stage.clientWidth;size=Math.max(260,w);dpr=Math.min(3,
   cv.style.height=size+'px';cv.width=Math.round(size*dpr);cv.height=Math.round(size*dpr);}
 new ResizeObserver(resize).observe(stage);resize();
 
+/* ========== 사고 소리 (Web Audio로 직접 합성, 음원 파일 없음) ========== */
+const Sound=(()=>{
+  let ctx=null,master=null,nbuf=null,on=true;
+  try{on=localStorage.getItem('wf_sound')!=='off';}catch(_){}
+  function ensure(){
+    if(!on)return null;
+    if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;
+      ctx=new AC();master=ctx.createGain();master.gain.value=.8;
+      const comp=ctx.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=6;
+      master.connect(comp);comp.connect(ctx.destination);
+      nbuf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate);const d=nbuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}
+    if(ctx.state==='suspended')ctx.resume().catch(()=>{});
+    return ctx.state==='running'?ctx:null;
+  }
+  const noise=()=>{const b=ctx.createBufferSource();b.buffer=nbuf;b.loop=true;return b;};
+  let curve=null;
+  const dist=()=>{if(curve)return curve;curve=new Float32Array(1024);for(let i=0;i<1024;i++){const x=i/1023*2-1;curve[i]=Math.tanh(x*3.5);}return curve;};
+  // 타이어 끌리는 소리: 좁은 대역 잡음 + 떨림, 점점 낮아짐
+  function screech(dur,power){
+    if(!ensure())return;const t=ctx.currentTime;
+    const src=noise(),bp=ctx.createBiquadFilter();bp.type='bandpass';bp.Q.value=22;
+    bp.frequency.setValueAtTime(2100,t);bp.frequency.linearRampToValueAtTime(1350,t+dur);
+    const lfo=ctx.createOscillator(),lg=ctx.createGain();lfo.frequency.value=13;lg.gain.value=140;lfo.connect(lg);lg.connect(bp.frequency);
+    const g=ctx.createGain(),v=.55*power;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.05);g.gain.setValueAtTime(v,t+dur*.75);g.gain.linearRampToValueAtTime(0,t+dur);
+    src.connect(bp);bp.connect(g);g.connect(master);
+    src.start(t,Math.random());src.stop(t+dur+.05);lfo.start(t);lfo.stop(t+dur+.05);
+  }
+  // 충돌: 낮은 쿵 + 찌그러지는 금속 + 금속 울림 + 유리 파편
+  function crash(power){
+    if(!ensure())return;const t=ctx.currentTime,p=clamp(power,.3,1);
+    const o=ctx.createOscillator(),og=ctx.createGain();o.type='sine';
+    o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(38,t+.4);
+    og.gain.setValueAtTime(1.1*p,t);og.gain.exponentialRampToValueAtTime(.001,t+.55);o.connect(og);og.connect(master);o.start(t);o.stop(t+.6);
+    const n=noise(),lp=ctx.createBiquadFilter(),ws=ctx.createWaveShaper(),ng=ctx.createGain();
+    lp.type='lowpass';lp.frequency.setValueAtTime(3200,t);lp.frequency.exponentialRampToValueAtTime(260,t+.45);ws.curve=dist();
+    ng.gain.setValueAtTime(.9*p,t);ng.gain.exponentialRampToValueAtTime(.001,t+.5);
+    n.connect(lp);lp.connect(ws);ws.connect(ng);ng.connect(master);n.start(t,Math.random());n.stop(t+.55);
+    [467,733,1129,1597].forEach((f,i)=>{const m=ctx.createOscillator(),mg=ctx.createGain(),st=t+.008+i*.011;m.type='triangle';m.frequency.value=f*(.92+Math.random()*.16);
+      mg.gain.setValueAtTime(0,t);mg.gain.linearRampToValueAtTime(.11*p,st);mg.gain.exponentialRampToValueAtTime(.001,st+.5+Math.random()*.4);
+      m.connect(mg);mg.connect(master);m.start(t);m.stop(st+1);});
+    const pieces=Math.round(8+16*p);
+    for(let i=0;i<pieces;i++){const st=t+.04+Math.random()*.7*Math.sqrt(Math.random()),b=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain();
+      b.buffer=nbuf;f.type='bandpass';f.frequency.value=3500+Math.random()*5500;f.Q.value=9;
+      g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(.3*p*(.3+Math.random()*.7),st+.003);g.gain.exponentialRampToValueAtTime(.001,st+.04+Math.random()*.14);
+      b.connect(f);f.connect(g);g.connect(master);b.start(st,Math.random());b.stop(st+.22);}
+  }
+  function setOn(v){on=v;try{localStorage.setItem('wf_sound',v?'on':'off');}catch(_){}if(!v&&ctx)ctx.suspend().catch(()=>{});else ensure();}
+  // 브라우저는 사용자가 한 번 누르기 전에는 소리를 막는다
+  const unlock=()=>{ensure();};
+  window.addEventListener('pointerdown',unlock,{passive:true});window.addEventListener('keydown',unlock);
+  return{screech,crash,setOn,get on(){return on;}};
+})();
+
 const A={sc:null,state:'idle',tau:0,real:0,post:0,poses:{},phys:null,parts:[],skids:{A:[],B:[]},shake:0,
   cam:{x:CX,y:CY,z:1},onDone:null,preview:null,clock:0,blankMap:'sig'};
 function play(sc,onDone){
-  A.sc=sc;A.state='run';A.tau=0;A.real=0;A.post=0;A.parts=[];A.skids={A:[],B:[]};A.shake=0;A.phys=null;A.onDone=onDone||null;A.preview=null;
+  A.sc=sc;A.state='run';A.tau=0;A.sfx={screech:false,brake:false};A.real=0;A.post=0;A.parts=[];A.skids={A:[],B:[]};A.shake=0;A.phys=null;A.onDone=onDone||null;A.preview=null;
   for(const k of['A','B'])A.poses[k]=poseAt(sc.cars[k],0);
   replayBtn.classList.remove('show');
 }
@@ -503,6 +557,7 @@ function startImpact(){
     const r=sub(cp,V(P.x,P.y));P.w=clamp((r.x*imp[k].y-r.y*imp[k].x)/(CAR_L*CAR_L*.55),-3.4,3.4);}
   A.phys=ph;A.state='post';A.real=0;A.post=0;A.shake=clamp(rel/260,.45,1.4);
   const power=clamp(rel/300,.4,1.6);
+  Sound.crash(clamp(rel/420,.3,1));
   for(let i=0;i<Math.round(46*power);i++){const an=Math.random()*Math.PI*2,sp=(180+Math.random()*560)*Math.sqrt(power);
     A.parts.push({t:'spark',x:cp.x,y:cp.y,vx:Math.cos(an)*sp,vy:Math.sin(an)*sp,life:.35+Math.random()*.6,max:1});}
   for(let i=0;i<Math.round(16*power);i++){const an=Math.random()*Math.PI*2,sp=(60+Math.random()*240)*power;
@@ -516,6 +571,11 @@ function update(dt){
   if(A.state==='run'&&sc){
     let scale=1;if(sc.impact){const rem=sc.T-A.tau;if(rem<.4)scale=lerp(.42,1,rem/.4);}
     A.tau+=dt*scale;
+    if(sc.impact&&!A.sfx.screech&&sc.T-A.tau<.5){A.sfx.screech=true;
+      const vmax=Math.max(...['A','B'].map(k=>motionV(sc.cars[k].motion,A.tau)))/KMH;
+      if(vmax>=20)Sound.screech(.9,clamp(vmax/80,.35,1));}
+    for(const k of['A','B']){const mo=sc.cars[k].motion;
+      if(mo.type==='stop'&&!A.sfx.brake&&A.tau>=mo.t0&&mo.t1-mo.t0<.8){A.sfx.brake=true;Sound.screech(mo.t1-mo.t0+.15,clamp(mo.v/KMH/80,.35,.9));}}
     if(A.tau>=sc.T){A.tau=sc.T;
       if(sc.impact){for(const k of['A','B'])A.poses[k]=poseAt(sc.cars[k],sc.T);startImpact();}
       else{A.state='done';finish();}}
@@ -756,6 +816,9 @@ const $=id=>document.getElementById(id);
 const hint=$('hint'),replayBtn=$('replay');
 let mode='quiz',replayFn=null;
 replayBtn.onclick=()=>{if(replayFn)replayFn();};
+const soundBtn=$('soundBtn');
+const paintSound=()=>{soundBtn.textContent=Sound.on?'소리 켜짐':'소리 꺼짐';soundBtn.classList.toggle('off',!Sound.on);};
+soundBtn.onclick=()=>{Sound.setOn(!Sound.on);paintSound();};paintSound();
 function setHint(t){hint.textContent=t||'';}
 function ratioBar(a,b){return`<div class="bar"><div class="ba" style="flex-grow:${Math.max(a,0.0001)}">${a?'A '+a:''}</div><div class="bb" style="flex-grow:${Math.max(b,0.0001)}">${b?'B '+b:''}</div></div>`;}
 function explainHTML(res){

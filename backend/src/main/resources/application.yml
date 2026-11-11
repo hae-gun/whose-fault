@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: whose-fault-api
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5433/whosefault}
+    username: ${DB_USER:whosefault}
+    password: ${DB_PASSWORD:whosefault}
+    hikari:
+      maximum-pool-size: ${DB_POOL:10}
+  flyway:
+    enabled: true
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+whosefault:
+  token-secret: ${TOKEN_SECRET:}
+  admin-token: ${ADMIN_TOKEN:}
+  allowed-origins: ${ALLOWED_ORIGINS:https://nobody-asked.dev,http://localhost:8000,http://127.0.0.1:8000}
+  trust-proxy-headers: ${TRUST_PROXY_HEADERS:false}
+  hide-at-reports: 3

@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:whosefault;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+whosefault:
+  token-secret: test-secret-test-secret-test-secret-0123
+  admin-token: test-admin-token
+  allowed-origins: http://localhost:8000
+  trust-proxy-headers: false

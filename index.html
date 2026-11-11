@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>몇 대 몇? 과실비율 시뮬레이터</title>
+<meta name="description" content="사고 영상을 보고 몇 대 몇인지 맞혀보세요. 신호위반, 비보호 좌회전, 유턴, 꼬리물기까지 내 과실 판단력 테스트">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="몇 대 몇?">
+<meta property="og:title" content="몇 대 몇? 자동차 사고 과실비율 퀴즈">
+<meta property="og:description" content="사고 영상을 보고 몇 대 몇인지 맞혀보세요. 내 과실 판단력 등급은?">
+<meta property="og:image" content="https://nobody-asked.dev/whose-fault/og/main.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:url" content="https://nobody-asked.dev/whose-fault/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>몇 대 <em>몇?</em></h1>
+      <div class="tag">자동차 사고 과실비율 시뮬레이터</div>
+    </div>
+    <div class="legend"><span><i class="dot" style="background:var(--a)"></i>A 차</span><span><i class="dot" style="background:var(--b)"></i>B 차</span></div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-mode="quiz" class="on">맞히기</button>
+    <button data-mode="draw">직접 그리기</button>
+    <button data-mode="vote">판결 투표</button>
+    <button data-mode="admin" id="adminTab" class="hidden">관리</button>
+  </nav>
+
+  <div class="stage" id="stage">
+    <canvas id="cv"></canvas>
+    <div class="hint" id="hint"></div>
+    <button class="replay" id="replay">다시 보기</button>
+  </div>
+
+  <!-- 맞히기 -->
+  <section id="p-quiz">
+    <div class="card" id="quizCard">
+      <div class="qhead"><span id="qNum">문제 1</span><span id="qScore">0점</span></div>
+      <div class="progress"><i id="qProg" style="width:0"></i></div>
+      <h2 class="qtitle" id="qTitle"></h2>
+      <p class="story" id="qStory"></p>
+      <div class="chips" id="qChips"></div>
+      <div class="guess" id="qGuess">
+        <div class="ratio-big"><span class="ra" id="gA">50</span><small>:</small><span class="rb" id="gB">50</span></div>
+        <input type="range" id="gRange" min="0" max="100" step="10" value="50">
+        <div class="scale"><span>A 잘못 0</span><span>반반</span><span>A 잘못 100</span></div>
+        <button class="btn" id="qSubmit">정답 확인</button>
+      </div>
+      <div id="qReveal"></div>
+    </div>
+    <div class="card hidden" id="quizEnd"></div>
+  </section>
+
+  <!-- 직접 그리기 -->
+  <section id="p-draw" class="hidden">
+    <div class="card">
+      <div class="label" style="margin-top:0">도로 선택</div>
+      <div class="seg" id="mapSeg"></div>
+      <button class="snap" id="snapBtn"></button>
+      <div class="msg" id="drawGuide">화면 위에 손가락으로 파란 차 A의 경로를 먼저 그리고, 다음으로 빨간 차 B의 경로를 그려주세요. 대충 그려도 차선에 맞게 자동으로 맞춰져요.</div>
+      <div id="drawCars"></div>
+      <div class="row">
+        <button class="btn ghost" id="drawReset">다시 그리기</button>
+        <button class="btn" id="drawRun" disabled>사고 재생</button>
+      </div>
+      <div id="drawResult"></div>
+    </div>
+    <div class="card hidden" id="uploadCard">
+      <div class="label" style="margin-top:0">이 사고를 판결 투표에 올리기</div>
+      <input type="text" id="upTitle" maxlength="40" placeholder="제목 (예: 퇴근길 교차로 접촉사고)">
+      <textarea id="upDesc" maxlength="120" placeholder="상황 설명 (선택, 120자)"></textarea>
+      <button class="btn" id="upBtn">투표에 올리기</button>
+      <div id="upMsg"></div>
+    </div>
+  </section>
+
+  <!-- 판결 투표 -->
+  <section id="p-vote" class="hidden">
+    <div class="card" id="voteDetail">
+      <div class="msg">사람들이 직접 그려 올린 사고예요. 영상을 보고 몇 대 몇인지 투표하면 다른 사람들 판단과 기준표 결과를 볼 수 있어요.</div>
+    </div>
+    <div class="card">
+      <div class="label" style="margin-top:0">올라온 사고</div>
+      <div id="caseStatus" class="msg">불러오는 중...</div>
+      <div class="cases" id="caseList"></div>
+    </div>
+  </section>
+
+  <section id="p-admin" class="hidden"><div id="adminBox"></div></section>
+
+  <p class="foot">손해보험협회 "자동차사고 과실비율 인정기준"의 대표 유형을 단순화한 학습과 놀이용 근사치예요. 실제 과실은 블랙박스, 도로 상황, 보험사 협의에 따라 달라집니다. 정확한 기준은 <a href="https://accident.knia.or.kr" target="_blank" rel="noopener">과실비율정보포털</a>에서 확인하세요.</p>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

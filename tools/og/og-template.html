@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:K;src:local('Noto Sans CJK KR'),local('Noto Sans KR');}
+*{box-sizing:border-box;margin:0}
+html,body{width:1200px;height:630px;overflow:hidden}
+body{font-family:'Noto Sans CJK KR','Noto Sans KR',sans-serif;background:#f3f1ec;color:#1c1f24;position:relative}
+.road{position:absolute;inset:0;overflow:hidden}
+.road .v{position:absolute;left:770px;top:-20px;width:190px;height:700px;background:#50565f;box-shadow:0 0 0 14px #cdc7bb}
+.road .h{position:absolute;left:600px;top:240px;width:700px;height:190px;background:#50565f;box-shadow:0 0 0 14px #cdc7bb}
+.road .grass{position:absolute;left:560px;top:0;width:640px;height:630px;background:#dbe5cf}
+.cw{position:absolute;background:repeating-linear-gradient(90deg,#f2f2f2 0 14px,transparent 14px 28px)}
+.cl{position:absolute;background:#f2c230}
+.car{position:absolute;width:120px;height:60px;border-radius:18px;box-shadow:4px 8px 0 rgba(0,0,0,.2)}
+.car::before{content:'';position:absolute;left:30px;top:9px;width:50px;height:42px;border-radius:10px;background:rgba(0,0,0,.12)}
+.car::after{content:'';position:absolute;left:78px;top:9px;width:14px;height:42px;border-radius:4px;background:rgba(22,30,42,.8)}
+.ca{background:linear-gradient(180deg,#6b97ff,#2f6bff 50%,#2350c2);left:820px;top:385px;transform:rotate(-90deg)}
+.cb{background:linear-gradient(180deg,#ff8285,#ff4a4f 50%,#c9353a);left:892px;top:300px;transform:rotate(180deg)}
+.boom{position:absolute;left:840px;top:290px;width:130px;height:130px}
+.panel{position:absolute;left:0;top:0;width:640px;height:630px;background:#f3f1ec;padding:58px 56px;display:flex;flex-direction:column}
+.panel::after{content:'';position:absolute;right:-60px;top:0;width:120px;height:630px;background:#f3f1ec;transform:skewX(-8deg)}
+.brand{font-size:34px;font-weight:900;letter-spacing:-1px;position:relative;z-index:1}
+.brand em{font-style:normal;color:#ff4a4f}
+.sub{font-size:22px;color:#6b7079;margin-top:2px;position:relative;z-index:1}
+.lead{margin-top:auto;font-size:26px;font-weight:700;color:#3d4148;position:relative;z-index:1}
+.grade{font-size:var(--gs,64px);font-weight:900;letter-spacing:-2px;line-height:1.12;margin-top:8px;position:relative;z-index:1;word-break:keep-all}
+.tag{margin-top:18px;font-size:25px;color:#3d4148;position:relative;z-index:1;word-break:keep-all;line-height:1.45}
+.cta{margin-top:30px;display:inline-flex;align-self:flex-start;background:#1c1f24;color:#fff;font-size:24px;font-weight:700;padding:14px 26px;border-radius:999px;position:relative;z-index:1}
+.badge{position:absolute;right:60px;top:52px;z-index:2;background:var(--c);color:#fff;font-weight:900;font-size:24px;padding:10px 22px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.ratio{position:absolute;right:70px;bottom:56px;z-index:2;display:flex;align-items:baseline;gap:10px;background:#fff;padding:14px 26px;border-radius:20px;box-shadow:0 6px 20px rgba(0,0,0,.15);font-weight:900;font-size:46px}
+.ratio .a{color:#2f6bff}.ratio .b{color:#ff4a4f}.ratio small{font-size:22px;color:#6b7079}
+</style></head>
+<body>
+<div class="road">
+  <div class="grass"></div><div class="v"></div><div class="h"></div>
+  <div class="cl" style="left:862px;top:-20px;width:3px;height:230px"></div><div class="cl" style="left:868px;top:-20px;width:3px;height:230px"></div>
+  <div class="cl" style="left:862px;top:460px;width:3px;height:200px"></div><div class="cl" style="left:868px;top:460px;width:3px;height:200px"></div>
+  <div class="cl" style="left:990px;top:332px;width:260px;height:3px"></div><div class="cl" style="left:990px;top:338px;width:260px;height:3px"></div>
+  <div class="cw" style="left:772px;top:200px;width:186px;height:34px"></div>
+  <div class="cw" style="left:772px;top:436px;width:186px;height:34px"></div>
+  <div class="car ca"></div><div class="car cb"></div>
+  <svg class="boom" viewBox="0 0 130 130"><g fill="#ffd43b" stroke="#fff" stroke-width="4" stroke-linejoin="round"><path d="M65 8 L76 46 L116 30 L88 62 L124 82 L82 82 L90 122 L64 92 L38 122 L44 84 L6 86 L40 62 L12 30 L52 46 Z"/></g><path d="M65 36 L71 56 L92 50 L78 66 L96 78 L74 78 L78 98 L64 84 L50 98 L54 80 L34 80 L52 66 L38 50 L58 56 Z" fill="#ff8a00"/></svg>
+</div>
+<div class="panel">
+  <div class="brand">몇 대 <em>몇?</em></div>
+  <div class="sub">자동차 사고 과실비율 퀴즈</div>
+  <div class="lead" id="lead">내 과실 판단력 등급은</div>
+  <div class="grade" id="grade">보험사 에이스 손해사정사</div>
+  <div class="tag" id="tag">과실 판단은 거의 프로 수준</div>
+  <div class="cta" id="cta">나도 몇 대 몇 맞혀보기 →</div>
+</div>
+<div class="badge" id="badge" style="--c:#2f6bff">상위 5%</div>
+<div class="ratio" id="ratio"><span class="a">30</span><small>:</small><span class="b">70</span></div>
+<script>
+const q=new URLSearchParams(location.search);
+for(const k of['lead','grade','tag','cta','badge'])if(q.has(k))document.getElementById(k).textContent=q.get(k);
+if(q.has('c'))document.getElementById('badge').style.setProperty('--c',q.get('c'));
+if(q.has('gs'))document.getElementById('grade').style.setProperty('--gs',q.get('gs'));
+if(q.has('ra')){const [a,b]=q.get('ra').split(':');document.querySelector('#ratio .a').textContent=a;document.querySelector('#ratio .b').textContent=b;}
+if(q.get('nobadge'))document.getElementById('badge').remove();
+</script>
+</body></html>

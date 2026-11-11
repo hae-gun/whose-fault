@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나는 "보험사 에이스 손해사정사" | 몇 대 몇?</title>
+<meta name="description" content="블랙박스 영상만 봐도 몇 대 몇이 보이는 사람. 사고 영상을 보고 몇 대 몇인지 맞혀보세요!">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="몇 대 몇?">
+<meta property="og:title" content="내 과실 판단력은 &quot;보험사 에이스 손해사정사&quot; (S등급)">
+<meta property="og:description" content="블랙박스 영상만 봐도 몇 대 몇이 보이는 사람. 사고 영상 보고 몇 대 몇인지 맞혀보세요!">
+<meta property="og:image" content="https://nobody-asked.dev/whose-fault/og/ace.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:url" content="https://nobody-asked.dev/whose-fault/r/ace.html">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f1ec;color:#1c1f24;font-family:'Noto Sans KR',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:560px;margin:0 auto;padding:20px 16px 40px}
+.brand{font-size:22px;font-weight:900;letter-spacing:-.5px}.brand em{font-style:normal;color:#ff4a4f}
+.card{background:#fff;border-radius:22px;overflow:hidden;margin-top:14px;box-shadow:0 2px 14px rgba(0,0,0,.06)}
+.card img{display:block;width:100%;height:auto}
+.body{padding:20px}
+.who{font-size:13px;color:#6b7079;font-weight:700}
+.score{font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1.1}
+.score small{font-size:20px;color:#6b7079;letter-spacing:0}
+.badge{display:inline-block;background:#7c3aed;color:#fff;font-weight:900;font-size:13px;padding:4px 12px;border-radius:999px;margin-top:6px}
+.name{font-size:24px;font-weight:900;margin-top:8px;letter-spacing:-.5px}
+.tag{color:#3d4148;margin-top:4px;font-size:15px}
+.btn{display:block;width:100%;text-align:center;text-decoration:none;border:0;border-radius:14px;padding:16px;font:700 16px 'Noto Sans KR',sans-serif;background:#1c1f24;color:#fff;margin-top:12px;cursor:pointer}
+.btn.ghost{background:#fff;color:#1c1f24;border:1px solid #e7e3da}
+.msg{font-size:13px;color:#3d4148;background:#fff;border-radius:12px;padding:12px;margin-top:10px;word-break:break-all}
+.grades{margin-top:22px;background:#fff;border-radius:18px;padding:16px}
+.grades h3{margin:0 0 8px;font-size:14px}
+.g{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:14px;border-bottom:1px solid #f3f1ec}
+.g:last-child{border:0}.g b{width:46px}.g.me{font-weight:900}
+.foot{font-size:11px;color:#6b7079;line-height:1.6;margin-top:18px}
+</style></head>
+<body><div class="wrap">
+<div class="brand">몇 대 <em>몇?</em></div>
+<div class="card"><img src="../og/ace.png" alt="보험사 에이스 손해사정사 등급 카드" width="1200" height="630">
+<div class="body">
+<div class="who" id="who">친구의 과실 판단력 결과</div>
+<div class="score" id="score" hidden></div>
+<div class="badge">S등급</div>
+<div class="name">보험사 에이스 손해사정사</div>
+<div class="tag">블랙박스 영상만 봐도 몇 대 몇이 보이는 사람</div>
+</div></div>
+<a class="btn" href="../?from=share&amp;g=ace">나도 몇 대 몇 맞혀보기</a>
+<button class="btn ghost" id="share">이 결과 공유하기</button>
+<div id="msg"></div>
+<div class="grades"><h3>전체 등급표</h3><div class="g me"><b style="color:#7c3aed">S</b><span>보험사 에이스 손해사정사</span><span style="margin-left:auto;color:#6b7079;font-size:12px">90점 이상</span></div><div class="g"><b style="color:#2f6bff">A</b><span>베테랑 운전자</span><span style="margin-left:auto;color:#6b7079;font-size:12px">70점 이상</span></div><div class="g"><b style="color:#0f9f6e">B</b><span>블랙박스 영상 덕후</span><span style="margin-left:auto;color:#6b7079;font-size:12px">50점 이상</span></div><div class="g"><b style="color:#f59e0b">C</b><span>초보 운전 스티커</span><span style="margin-left:auto;color:#6b7079;font-size:12px">30점 이상</span></div><div class="g"><b style="color:#ff4a4f">F</b><span>면허 다시 따야 할 수도</span><span style="margin-left:auto;color:#6b7079;font-size:12px">0점 이상</span></div></div>
+<p class="foot">손해보험협회 "자동차사고 과실비율 인정기준"의 대표 유형을 단순화한 학습과 놀이용 퀴즈예요. 실제 과실은 블랙박스, 도로 상황, 보험사 협의에 따라 달라져요.</p>
+</div>
+<script>
+(function(){
+  var s=parseInt(new URLSearchParams(location.search).get('s'),10);
+  if(s>=0&&s<=100){var el=document.getElementById('score');el.hidden=false;el.innerHTML='';el.appendChild(document.createTextNode(s));var sm=document.createElement('small');sm.textContent=' / 100점';el.appendChild(sm);}
+  var url=location.href,text='내 과실 판단력은 "보험사 에이스 손해사정사" (S등급)! 당신은 몇 대 몇인지 맞힐 수 있어요?';
+  document.getElementById('share').onclick=function(){
+    if(navigator.share){navigator.share({title:'몇 대 몇?',text:text,url:url}).catch(function(){});return;}
+    var done=function(){show('링크를 복사했어요. 카톡에 붙여넣으면 등급 카드가 함께 보여요.');};
+    if(navigator.clipboard)navigator.clipboard.writeText(text+'\n'+url).then(done,function(){show(text+' '+url);});else show(text+' '+url);
+  };
+  function show(t){var m=document.getElementById('msg');m.innerHTML='';var d=document.createElement('div');d.className='msg';d.textContent=t;m.appendChild(d);}
+})();
+</script>
+</body></html>

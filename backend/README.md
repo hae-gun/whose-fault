@@ -24,7 +24,7 @@ export $(grep -v '^#' .env | xargs)
 프론트는 레포 루트에서 `python3 -m http.server 8000` 후 http://localhost:8000 으로 열면 `js/config.js`가 자동으로 localhost:8080을 봅니다.
 관리 탭은 주소에 `?admin=1`을 붙이면 나타나고, `.env`의 `ADMIN_TOKEN`을 입력하면 열립니다.
 
-서버 배포는 `docker compose up -d --build` 하나로 DB와 API가 같이 뜹니다. API는 `127.0.0.1:8090`에만 열리므로 앞에 nginx나 Cloudflare Tunnel로 HTTPS를 붙이고, 그때는 `TRUST_PROXY_HEADERS=true`로 둡니다.
+서버 배포는 `docker compose up -d --build` 하나로 DB와 API가 같이 뜹니다(프로젝트 이름 `whose-fault`). API는 `127.0.0.1:8090`에만 열리고, 밖에서는 고해야지 서버의 앞단 Nginx가 `whose-fault-edge` 네트워크로 받아 `api.whose-fault.nobody-asked.dev`로 내보냅니다. 연결 순서는 online_gohaeyaji 저장소 `infra/README.md`의 2-1-2. Nginx가 클라이언트 IP 헤더를 덮어쓰므로 `TRUST_PROXY_HEADERS=true`로 둡니다.
 
 ## 인증
 

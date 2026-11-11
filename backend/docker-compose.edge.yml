@@ -1,0 +1,14 @@
+# 서버 전용: 고해야지 서버의 앞단 Nginx(infra/app)가 붙는 whose-fault-edge 네트워크에 API를 연결한다.
+# 서버 .env 에 COMPOSE_FILE=docker-compose.yml:docker-compose.edge.yml 을 넣으면 docker compose 가 자동으로 함께 읽는다.
+# 처음 한 번: docker network create whose-fault-edge
+services:
+  api:
+    networks:
+      default: {}
+      edge:
+        aliases: [whose-fault-api]
+
+networks:
+  edge:
+    external: true
+    name: whose-fault-edge

@@ -117,6 +117,16 @@ public class QuizService {
         if (v != null) v[idx]++;
     }
 
+    /** 최고점(0~100)을 등급으로. 프론트 GRADES와 같은 경계(90, 70, 50, 30). 기록이 없으면 null */
+    public static String gradeOf(Integer best) {
+        if (best == null) return null;
+        if (best >= 90) return "ace";
+        if (best >= 70) return "veteran";
+        if (best >= 50) return "otaku";
+        if (best >= 30) return "newbie";
+        return "relicense";
+    }
+
     private static boolean validRatio(int v) {
         return v >= 0 && v <= 100 && v % 10 == 0;
     }

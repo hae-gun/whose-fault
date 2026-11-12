@@ -82,6 +82,9 @@ class ApiFlowTest {
         // 표 바꾸기
         mvc.perform(as(put("/api/cases/" + caseId + "/vote"), bob).content("{\"choice\":\"B100\",\"disagree\":true}")).andExpect(status().isNoContent());
 
+        // bob은 퀴즈 92점이라 댓글에 S등급(ace) 뱃지가 붙는다
+        mvc.perform(as(post("/api/quiz/results"), bob).content("{\"score\":92,\"grade\":\"ace\",\"answers\":[]}"))
+                .andExpect(status().isNoContent());
         JsonNode c1 = json(as(post("/api/cases/" + caseId + "/comments"), bob).content("{\"text\":\"빨간불이면 무조건이지\"}"));
         String commentId = c1.get("id").asText();
         // 15초 안에 또 쓰면 429
@@ -97,6 +100,7 @@ class ApiFlowTest {
         assertThat(state.get("votes").get("median").asInt()).isEqualTo(0);
         JsonNode cm = state.get("comments").get(0);
         assertThat(cm.get("likes").asInt()).isEqualTo(1);
+        assertThat(cm.get("grade").asText()).isEqualTo("ace");
         assertThat(cm.get("liked").asBoolean()).isTrue();
         assertThat(cm.get("mine").asBoolean()).isFalse();
         assertThat(cm.get("choice").asText()).isEqualTo("B100");

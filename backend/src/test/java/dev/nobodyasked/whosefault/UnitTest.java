@@ -8,6 +8,7 @@ import dev.nobodyasked.whosefault.common.Nick;
 import dev.nobodyasked.whosefault.common.RateLimiter;
 import dev.nobodyasked.whosefault.common.TextFilter;
 import dev.nobodyasked.whosefault.config.AppProperties;
+import dev.nobodyasked.whosefault.quiz.QuizService;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,18 @@ class UnitTest {
 
     private static AppProperties props(String secret) {
         return new AppProperties(secret, "admin", List.of(), false, 3);
+    }
+
+    @Test
+    void gradeOfMatchesFrontendBoundaries() {
+        assertThat(QuizService.gradeOf(null)).isNull();
+        assertThat(QuizService.gradeOf(100)).isEqualTo("ace");
+        assertThat(QuizService.gradeOf(90)).isEqualTo("ace");
+        assertThat(QuizService.gradeOf(89)).isEqualTo("veteran");
+        assertThat(QuizService.gradeOf(70)).isEqualTo("veteran");
+        assertThat(QuizService.gradeOf(50)).isEqualTo("otaku");
+        assertThat(QuizService.gradeOf(30)).isEqualTo("newbie");
+        assertThat(QuizService.gradeOf(0)).isEqualTo("relicense");
     }
 
     @Test

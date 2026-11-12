@@ -20,8 +20,9 @@ public final class CaseDtos {
     /** median은 A 과실(%) 기준 중앙값. 5표 미만이면 프론트가 판결 대기로 표시한다. */
     public record VoteSummary(int total, Map<String, Integer> counts, int disagree, Integer median) {}
 
+    /** grade: 글쓴이의 퀴즈 최고점 등급(ace, veteran, otaku, newbie, relicense), 퀴즈를 안 풀었으면 null. veteran은 예전 프론트 호환용 */
     public record CommentItem(String id, String nick, String choice, int a, String text, long at,
-                              int likes, boolean liked, boolean mine, boolean veteran, boolean hidden, int reports) {}
+                              int likes, boolean liked, boolean mine, boolean veteran, String grade, boolean hidden, int reports) {}
 
     /**
      * 사고 하나의 현재 상태. 투표하기 전에는 votes와 comments가 null이다

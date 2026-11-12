@@ -14,6 +14,7 @@ import dev.nobodyasked.whosefault.config.AppProperties;
 import dev.nobodyasked.whosefault.players.PlayerRepository;
 import dev.nobodyasked.whosefault.reports.ReportRepository;
 import dev.nobodyasked.whosefault.reports.ReportRepository.ReportRow;
+import dev.nobodyasked.whosefault.quiz.QuizService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -96,7 +97,7 @@ public class CaseStateService {
             items.add(new CommentItem(c.id(), Nick.of(c.uid()), c.choice(), c.faultA(),
                     hidden && !admin ? null : c.body(), c.createdAt(),
                     likeCount.getOrDefault(c.id(), 0), likedByMe.contains(c.id()), c.uid().equals(uid),
-                    best.getOrDefault(c.uid(), 0) >= VETERAN_SCORE, hidden, admin ? rc : 0));
+                    best.getOrDefault(c.uid(), 0) >= VETERAN_SCORE, QuizService.gradeOf(best.get(c.uid())), hidden, admin ? rc : 0));
         }
         return new CaseState(caseId, rows.size(), commentCount, caseHidden, admin ? caseReports : 0, mine, summary, items, admin);
     }

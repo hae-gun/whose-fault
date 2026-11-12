@@ -11,7 +11,12 @@ public final class CaseDtos {
 
     public record VoteRequest(String choice, Boolean disagree) {}
 
-    public record CaseItem(String id, String title, String desc, JsonNode spec, long createdAt, int reports, boolean hidden) {}
+    /**
+     * 목록 한 줄. votes, comments는 전체 수(투표 전에도 공개되는 숫자라 쏠림을 만들지 않는다).
+     * heat는 최근 24시간 투표 + 댓글 x3, activeNow는 최근 1시간 참여한 사람 수, hot은 heat가 기준 이상.
+     */
+    public record CaseItem(String id, String title, String desc, JsonNode spec, long createdAt, int reports, boolean hidden,
+                           int votes, int comments, int heat, int activeNow, boolean hot) {}
 
     public record Created(String id) {}
 

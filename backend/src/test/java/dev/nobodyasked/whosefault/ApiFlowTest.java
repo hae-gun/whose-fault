@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.nobodyasked.whosefault.cases.CaseService;
 import dev.nobodyasked.whosefault.cases.SpecValidator;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -35,6 +37,7 @@ class ApiFlowTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper om;
     @Autowired SpecValidator validator;
+    @Autowired CaseService caseService;
 
     private String session() throws Exception {
         String body = mvc.perform(post("/api/session")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
@@ -193,5 +196,27 @@ class ApiFlowTest {
             }
         }
         assertThat(seeds).isEmpty();
+    }
+
+    @Test
+    void hotCase() throws Exception {
+        // 투표 4 + 댓글 2(x3) = 10이면 HOT, 참여한 사람 4명
+        String author = session();
+        String id = json(as(post("/api/cases"), author).content("{\"title\":\"뜨거운 사고\",\"spec\":" + SPEC + "}")).get("id").asText();
+        for (int i = 0; i < 4; i++) {
+            String u = session();
+            mvc.perform(as(put("/api/cases/" + id + "/vote"), u).content("{\"choice\":\"B100\"}")).andExpect(status().isNoContent());
+            if (i < 2) mvc.perform(as(post("/api/cases/" + id + "/comments"), u).content("{\"text\":\"이건 B가 다 물어야지\"}"))
+                    .andExpect(status().isCreated());
+        }
+        ReflectionTestUtils.setField(caseService, "activityAt", 0L); // 10초 집계 캐시 비우기
+        JsonNode hot = null;
+        for (JsonNode c : json(get("/api/cases"))) if (c.get("id").asText().equals(id)) hot = c;
+        assertThat(hot).isNotNull();
+        assertThat(hot.get("votes").asInt()).isEqualTo(4);
+        assertThat(hot.get("comments").asInt()).isEqualTo(2);
+        assertThat(hot.get("heat").asInt()).isEqualTo(10);
+        assertThat(hot.get("activeNow").asInt()).isEqualTo(4);
+        assertThat(hot.get("hot").asBoolean()).isTrue();
     }
 }

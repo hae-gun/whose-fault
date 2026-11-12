@@ -9,6 +9,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.nobodyasked.whosefault.cases.SpecValidator;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -31,6 +34,7 @@ class ApiFlowTest {
 
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper om;
+    @Autowired SpecValidator validator;
 
     private String session() throws Exception {
         String body = mvc.perform(post("/api/session")).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
@@ -163,5 +167,18 @@ class ApiFlowTest {
         mvc.perform(as(post("/api/cases"), t).content("{\"title\":\"x\",\"spec\":{\"map\":\"moon\"}}")).andExpect(status().isBadRequest());
         mvc.perform(as(post("/api/cases"), t).content("{\"title\":\"x\",\"spec\":{\"map\":\"sig\",\"A\":{\"pts\":[[0,0],[1,1],[2,2],[99999,3]]},\"B\":{\"arm\":\"S\",\"man\":\"left\"}}}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void seedCasesAreNormalized() throws Exception {
+        // V3 마이그레이션의 예시 사고 5건: 목록에 보이고, 스펙이 정규화 결과와 같아야 한다
+        Set<String> seeds = new HashSet<>(Set.of("seedYellowLeft01", "seedRoundEnter02", "seedAlleyLeft03",
+                "seedCutIn110km04", "seedParkExit05"));
+        for (JsonNode item : json(get("/api/cases"))) {
+            if (seeds.remove(item.get("id").asText())) {
+                assertThat(validator.normalize(item.get("spec")).toString()).isEqualTo(item.get("spec").toString());
+            }
+        }
+        assertThat(seeds).isEmpty();
     }
 }

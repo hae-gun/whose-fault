@@ -14,6 +14,7 @@
 
 - 가운뎃점 기호(U+00B7)를 쓰지 않는다 (코드, 화면 문구, 문서 모두)
 - 커밋 메시지에 Claude 세션 ID나 세션 주소 줄을 넣지 않는다
+- css나 js를 고치면 커밋 전에 `python3 tools/bump_assets.py`를 돌린다 (index.html의 ?v= 해시 갱신. 안 하면 Pages 캐시 때문에 새 화면과 예전 코드가 섞인다)
 
 ## 코드 구조 (js/app.js, 하나의 IIFE)
 

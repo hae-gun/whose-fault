@@ -148,6 +148,6 @@ details.stddet summary{cursor:pointer;font-size:13px;font-weight:700}
 .kbox{background:var(--soft);border-radius:12px;padding:10px 12px}
 .kv{font-size:24px;font-weight:900;letter-spacing:-.5px;margin:2px 0}
 
-.lastbar{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:10px;font:700 13px 'Noto Sans KR';color:var(--ink);cursor:pointer}
+.lastbar{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 14px;margin:14px 0 10px;font:700 13px 'Noto Sans KR';color:var(--ink);cursor:pointer}
 .wrongs{margin-top:16px}
 .wrow{display:flex;align-items:center;gap:10px}.wrow>div{flex:1;min-width:0}.wrow .ctext{margin-top:0}

@@ -1245,12 +1245,16 @@ function voteEnter(){
 }
 function playSel(){if(!sel)return;const sp=sel.spec;const run=()=>play(buildScene(sp));run();replayFn=run;setHint('');}
 function selectCase(id){
-  const c=cases.find(x=>x.id===id);if(!c)return;sel=c;state=null;
+  const c=cases.find(x=>x.id===id);if(!c)return;sel=c;state=null;stateJson='';
   renderCaseList();renderVoteDetail();playSel();fetchState();
 }
 async function fetchState(){
   if(!sel)return;const id=sel.id;
-  try{const s=await api('GET','/api/cases/'+encodeURIComponent(id)+'/state');if(sel&&sel.id===id){state=s;renderVoteDetail(true);}}
+  try{const s=await api('GET','/api/cases/'+encodeURIComponent(id)+'/state');
+    if(sel&&sel.id===id){
+      // 5초 폴링에서 바뀐 게 없으면 다시 그리지 않는다 (쓰던 댓글, 열어 둔 신고 창이 날아가지 않게)
+      const js=JSON.stringify(s);if(js===stateJson&&$('vLive'))return;
+      stateJson=js;state=s;renderVoteDetail(true);}}
   catch(err){if(err.status===404&&sel&&sel.id===id){sel=null;state=null;renderVoteDetail();loadCases();}}
 }
 
@@ -1269,8 +1273,13 @@ function renderVoteDetail(onlyLive){
   box.append(foot);
   renderLive();
 }
+let stateJson='';
 function renderLive(){
-  const live=$('vLive');if(!live)return;live.innerHTML='';
+  const live=$('vLive');if(!live)return;
+  // 다시 그려도 쓰던 댓글과 커서 위치는 그대로 둔다
+  const ta0=live.querySelector('.cform textarea');
+  const draft=ta0?{v:ta0.value,focus:document.activeElement===ta0,a:ta0.selectionStart,b:ta0.selectionEnd}:null;
+  live.innerHTML='';
   if(!state){live.append(el('div','msg',apiOk?'불러오는 중...':'투표 서버에 연결할 수 없어요.'));return;}
   if(state.caseHidden&&!isOwner){live.append(el('div','msg warn','신고가 많이 접수되어 가려진 사고예요. 관리자가 확인 중이에요.'));return;}
   const mine=state.myVote||null,mc=mine?choiceOf(mine):null;
@@ -1283,6 +1292,8 @@ function renderLive(){
   live.append(resultsEl(mine));
   if(mine)live.append(commentsEl(mine));
   else if(state.comments)live.append(commentsEl(null));
+  const ta=live.querySelector('.cform textarea');
+  if(ta&&draft&&draft.v){ta.value=draft.v;if(draft.focus){ta.focus({preventScroll:true});try{ta.setSelectionRange(draft.a,draft.b);}catch(_){}}}
 }
 async function castVote(c,disagree){
   try{await api('PUT','/api/cases/'+encodeURIComponent(sel.id)+'/vote',{choice:c.k,disagree:!!disagree});await fetchState();}

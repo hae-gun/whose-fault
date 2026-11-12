@@ -458,15 +458,39 @@ function buildScene(sp){
       const sStar={[victim]:sv,[striker]:ss-off};
       T=clamp(Math.max(needT(cars.A,sStar.A),needT(cars.B,sStar.B)),2.2,5.5);
       for(const k of['A','B'])cars[k].motion={type:'const',sStar:sStar[k],v:cars[k].v,tRef:T};
+      // 노란불 꼬리물기(노란불 차 vs 수직 방향 녹색불 차): 노란불 차가 먼저 들어가 교차로 안에 서 있고 녹색불 차가 와서 부딪힌다
+      const yl=N.cars.A.info.light==='Y'&&N.cars.B.info.light==='G'?'A':N.cars.B.info.light==='Y'&&N.cars.A.info.light==='G'?'B':null;
+      if(yl&&m.lights&&!m.flash){T=Math.max(T,3.6);for(const k of['A','B'])cars[k].motion.tRef=T;
+        cars[yl].motion={type:'stop',sStar:sStar[yl],v:cars[yl].v,t0:T-2.3,t1:T-1.1};}
     }else{
       T=4.4;for(const k of['A','B']){const c=cars[k],[a,b]=viewRange(c.path,0);c.motion={type:'const',sStar:lerp(a,b,.5),v:c.v,tRef:k==='A'?1.8:2.8};}
       T=Math.max(T,...['A','B'].map(k=>{const c=cars[k],[,b]=viewRange(c.path,60);return c.motion.tRef+(b-c.motion.sStar)/c.v;}));T=Math.min(T,7);
     }
   }
   const sc={sp,N,map:sp.map,res,cars,T,impact};
+  sc.sig=signalPlan(N,cars,T);
   if(!res.invalid){const pa=poseAt(cars.A,T),pb=poseAt(cars.B,T);sc.focus=impact?V((pa.x+pb.x)/2,(pa.y+pb.y)/2):V(CX,CY);}
   return sc;
 }
+// 노란불 차와 녹색불 차가 서로 수직으로 만나는 사고는 실제 신호처럼 순서대로 바꿔 보여준다:
+// 노란불 차가 교차로에 들어간 뒤 그쪽이 빨간불로 바뀌고, 잠시 뒤 다른 쪽이 녹색불로 바뀐다
+function signalPlan(N,cars,T){
+  const m=N.m;if(!m.lights||m.flash)return null;
+  const I={A:N.cars.A.info,B:N.cars.B.info};
+  const y=I.A.light==='Y'&&I.B.light==='G'?'A':I.B.light==='Y'&&I.A.light==='G'?'B':null;if(!y)return null;
+  const g=other(y),dy=ARMS[I[y].arm],dg=ARMS[I[g].arm];if(!dy||!dg||Math.abs(dy.x*dg.x+dy.y*dg.y)>.5)return null;
+  // 차 앞부분이 교차로(정지선 안쪽)에 들어가는 시각
+  const enter=k=>{const c=cars[k],P=c.path;if(!c.motion)return null;let dIn=null;
+    for(let d=0;d<=P.L;d+=4){const q=pathAt(P,d);if(Math.abs(q.x-CX)<=m.hwV+24&&Math.abs(q.y-CY)<=m.hwH+24){dIn=d-CAR_L/2;break;}}
+    if(dIn==null)return null;for(let t=0;t<=T;t+=1/60)if(motionS(c.motion,t)>=dIn)return t;return null;};
+  const ty=enter(y),tg=enter(g);if(ty==null||tg==null)return null;
+  let tGreen=Math.min(tg-.6,T-.5),tRed=tGreen-.7;
+  if(tRed<ty+.2){tRed=ty+.2;tGreen=tRed+.5;}
+  if(tGreen>tg-.15)return null; // 순서를 맞출 수 없으면 원래처럼 고정 신호
+  return{[y]:[[0,'Y'],[tRed,'R']],[g]:[[0,'R'],[tGreen,'G']],times:{ty,tg,tRed,tGreen}};
+}
+function lightAt(sc,k,fallback){const seq=sc&&sc.sig&&sc.sig[k];if(!seq)return[fallback,9];
+  const t=A.state==='run'?A.tau:sc.T;let L=seq[0][1],since=t;for(const [at,l] of seq)if(t>=at){L=l;since=t-at;}return[L,since];}
 function motionS(mo,t){
   if(mo.type==='const')return mo.sStar+mo.v*(t-mo.tRef);
   const D=mo.t1-mo.t0,br=mo.v*D/2;
@@ -693,15 +717,17 @@ function drawMap(mk,N){
   ctx.fillRect(CX,CY+hwH+so,hwV,5);if(!tee)ctx.fillRect(CX-hwV,CY-hwH-so-5,hwV,5);
   ctx.fillRect(CX-hwV-so-5,CY,5,hwH);ctx.fillRect(CX+hwV+so,CY-hwH,5,hwH);
   if(m.mainH){label('대로',170,CY-hwH-30);label('소로',CX+hwV+60,160);}
-  if(m.lights&&N)for(const k of['A','B']){const c=N.cars[k].info;if(c.arm)m.flash?drawFlash(m,c.arm,c.light):drawSignal(m,c.arm,c.light);}
+  if(m.lights&&N)for(const k of['A','B']){const c=N.cars[k].info;if(c.arm)m.flash?drawFlash(m,c.arm,c.light):drawSignal(m,c.arm,...lightAt(A.sc&&A.sc.N===N?A.sc:null,k,c.light));}
 }
 function sigPos(m,arm,dist=70){const d=ARMS[arm],h=neg(d),r=rightOf(h),vert=Math.abs(h.x)<.5;
   const hwR=vert?m.hwV:m.hwH,hwC=vert?m.hwH:m.hwV;return add(add(V(CX,CY),mul(r,hwR+34)),mul(h,-(hwC+dist)));}
 function uMark(x,y,ang){ctx.save();ctx.translate(x,y);ctx.rotate(ang);ctx.strokeStyle='rgba(255,255,255,.78)';ctx.lineWidth=4;ctx.lineCap='round';
   ctx.beginPath();ctx.moveTo(-22,4);ctx.lineTo(8,4);ctx.arc(8,-6,10,Math.PI/2,-Math.PI/2,true);ctx.lineTo(-6,-16);ctx.stroke();
   ctx.fillStyle='rgba(255,255,255,.78)';ctx.beginPath();ctx.moveTo(-14,-16);ctx.lineTo(-4,-23);ctx.lineTo(-4,-9);ctx.closePath();ctx.fill();ctx.restore();}
-function drawSignal(m,arm,light){
+function drawSignal(m,arm,light,since=9){
   const p=sigPos(m,arm),w=74,hh=22,x=p.x-w/2,y=p.y-hh/2;
+  // 신호가 막 바뀌었으면 잠깐 테두리를 밝혀 눈길을 끈다
+  if(since<.7){const u=since/.7;ctx.strokeStyle=`rgba(255,255,255,${.85*(1-u)})`;ctx.lineWidth=4;rr(x-4-u*8,y-4-u*8,w+8+u*16,hh+8+u*16,10);ctx.stroke();}
   ctx.fillStyle='rgba(0,0,0,.25)';rr(x+2,y+3,w,hh,6);ctx.fill();
   ctx.fillStyle='#1f2227';rr(x,y,w,hh,6);ctx.fill();
   const lit=[light==='R'||light==='L',light==='Y',light==='L',light==='G'];
@@ -1527,7 +1553,7 @@ function renderAdmin(){
 }
 
 /* ========== 시작 ========== */
-window.__fs={Q,QD,normalize,judge,buildScene,play}; // 테스트용 훅
+window.__fs={Q,QD,normalize,judge,buildScene,play,MAPS}; // 테스트용 훅
 capsPromise=initCaps();
 document.querySelectorAll('#qMode button').forEach(b=>b.onclick=()=>{const d=b.dataset.q==='deep';if(d!==quiz.deep||quiz.single||quiz.i>=quiz.order.length){setQuizMode(d);window.scrollTo({top:0,behavior:'smooth'});}});
 $('qAll').onclick=()=>{showBank();window.scrollTo({top:0,behavior:'smooth'});};

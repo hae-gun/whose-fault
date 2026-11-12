@@ -1,0 +1,38 @@
+name: Deploy to GitHub Pages
+# 실행 목록에 "pages build and deployment" 대신 커밋 제목이 보이게 한다 (첫 줄만 표시됨)
+run-name: ${{ github.event_name == 'workflow_dispatch' && '수동 배포' || github.event.head_commit.message }}
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      # 사이트에 필요한 파일만 올린다 (backend, tools, docs 등은 빼기)
+      - name: Collect site files
+        run: |
+          mkdir _site
+          cp -r index.html CNAME css js og q r _site/
+          ls _site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

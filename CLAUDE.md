@@ -16,6 +16,7 @@
 - `main`은 배포용. GitHub Pages(프론트)와 서버의 `git pull`은 main 기준이라 main에 합치는 순간 프론트가 나간다
 - 배포할 때 develop에서 main으로 PR. 서버 변경이 들어 있으면 서버를 먼저 배포하고 main에 합친다 (서버 변경은 기존 프론트와 호환되게 만든다)
 - 급한 버그는 `fix/*`를 main에서 따서 main으로 PR한 뒤 develop에도 합친다
+- 프론트 배포는 `.github/workflows/deploy-pages.yml`(main 푸시 때 실행, 실행 이름은 커밋 제목). 사이트 파일은 index.html, CNAME, css, js, og, q, r만 올린다. 루트에 새 사이트 파일이나 폴더를 만들면 워크플로의 복사 목록에도 넣을 것
 
 ## 문서 작성 규칙
 

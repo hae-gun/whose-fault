@@ -886,12 +886,13 @@ function track(kind,grade,qid){const b={kind};if(grade)b.grade=grade;if(qid)b.qi
 function quizStart(){const ld=loadLast(),lb=$('qLast');
   if(ld){lb.classList.remove('hidden');lb.textContent=`지난 결과 ${ld.pct}점 보기, 틀린 문제 친구한테 내기 →`;lb.onclick=()=>{showEnd(ld,true);window.scrollTo({top:0,behavior:'smooth'});};}
   else lb.classList.add('hidden');
+  $('qAll').classList.remove('hidden');quiz.bank=false;
   quiz.single=false;quiz.order=shuffle(Q.map((_,i)=>i)).slice(0,10);quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
 function quizShow(){if(!quiz.started)quizStart();else if(quiz.i<quiz.order.length)quizPlay();else replayFn=null;}
 function quizPlay(){const q=Q[quiz.order[quiz.i]];setHint('A 파란 차, B 빨간 차');play(buildScene(q.sp),()=>setHint(quiz.answered?'':'몇 대 몇일까요?'));replayFn=()=>play(buildScene(q.sp));}
 function quizRender(){
   const q=Q[quiz.order[quiz.i]],n=quiz.order.length;quiz.answered=false;
-  $('qNum').textContent=quiz.single?'친구가 보낸 문제':`문제 ${quiz.i+1} / ${n}`;$('qScore').textContent=quiz.single?'':`${quiz.score}점`;$('qProg').style.width=quiz.single?'0':(quiz.i/n*100)+'%';
+  $('qNum').textContent=quiz.single?(quiz.bank?'전체 문제에서 고른 문제':'친구가 보낸 문제'):`문제 ${quiz.i+1} / ${n}`;$('qScore').textContent=quiz.single?'':`${quiz.score}점`;$('qProg').style.width=quiz.single?'0':(quiz.i/n*100)+'%';
   $('qTitle').textContent=q.t;$('qStory').textContent=q.s;renderChips($('qChips'),normalize(q.sp));
   setRange(gRange,50);gRange.oninput();gRange.disabled=false;
   $('qSubmit').classList.remove('hidden');$('qReveal').innerHTML='';
@@ -899,10 +900,11 @@ function quizRender(){
 }
 $('qSubmit').onclick=()=>{
   if(quiz.answered)return;quiz.answered=true;
-  $('qLast').classList.add('hidden'); // 푸는 중에는 지난 결과로 빠지지 않게
+  $('qLast').classList.add('hidden');if(!quiz.single)$('qAll').classList.add('hidden'); // 푸는 중에는 지난 결과로 빠지지 않게
   const q=Q[quiz.order[quiz.i]],res=judge(normalize(q.sp)),g=+gRange.value,diff=Math.abs(g-res.final[0]);
   const pts=diff===0?10:diff===10?6:diff===20?3:0;
-  if(quiz.single)track('qshare_answer',null,q.id);
+  markSolved(q.id,g);
+  if(quiz.single){if(!quiz.bank)track('qshare_answer',null,q.id);}
   else{
     quiz.log.push({qid:q.id,guess:g,answer:res.final[0]});
     if(quiz.log.length===1)track('quiz_start'); // 페이지만 열고 안 푼 사람은 세지 않게 첫 답에서 센다
@@ -918,12 +920,13 @@ $('qSubmit').onclick=()=>{
     friend=`<div class="msg">친구 답 <b>A ${f} : B ${100-f}</b>. ${cmp}</div>`;}
   // 틀린 문제는 친구한테 내기. 친구가 보낸 문제는 맞든 틀리든 다시 보낼 수 있게
   const canShare=quiz.single||diff>0;
-  const shareBtn=canShare?`<button class="btn ghost" id="qAsk">${quiz.single?'나도 친구한테 내기':'이 문제 친구한테 내기'}</button><div id="qAskMsg"></div>`:'';
-  const next=quiz.single?'다른 문제도 풀어 보기':lastQ?'결과 보기':'다음 문제';
+  const shareBtn=canShare?`<button class="btn ghost" id="qAsk">${quiz.single&&!quiz.bank?'나도 친구한테 내기':'이 문제 친구한테 내기'}</button><div id="qAskMsg"></div>`:'';
+  const next=quiz.bank?'전체 문제 목록으로':quiz.single?'다른 문제도 풀어 보기':lastQ?'결과 보기':'다음 문제';
   $('qReveal').innerHTML=`<div class="reveal"><div class="verdict ${v[0]}">${v[1]}</div><div style="font-size:12px;color:var(--sub)">내 답 A ${g} : B ${100-g}</div>${ratioBar(res.final[0],res.final[1])}${friend}${explainHTML(res)}${shareBtn}<button class="btn" id="qNext">${next}</button></div>`;
   setHint('');
   if(canShare)$('qAsk').onclick=()=>askFriend(q,g,diff);
   $('qNext').onclick=()=>{
+    if(quiz.bank){showBank();window.scrollTo({top:0,behavior:'smooth'});return;}
     if(quiz.single){history.replaceState(null,'',location.pathname);quizStart();window.scrollTo({top:0,behavior:'smooth'});return;}
     quiz.i++;if(quiz.i>=quiz.order.length)quizEnd();else{quizRender();window.scrollTo({top:0,behavior:'smooth'});}};
 };
@@ -936,6 +939,28 @@ async function askFriend(q,g,diff,msgEl){
   const m=msgEl||$('qAskMsg');
   try{await navigator.clipboard.writeText(text+'\n'+url);m.innerHTML='<div class="msg">링크를 복사했어요. 카톡에 붙여넣으면 문제 카드가 함께 보여요.</div>';}
   catch(_){m.innerHTML='<div class="msg"></div>';m.firstChild.textContent=text+' '+url;}
+}
+// 푼 문제 기록 (문제 id -> 내 마지막 답). 전체 문제 목록에 표시
+const SOLVED_KEY='wf_solved';
+function loadSolved(){try{const o=JSON.parse(store.get(SOLVED_KEY)||'{}');return o&&typeof o==='object'?o:{};}catch(_){return {};}}
+function markSolved(qid,g){const o=loadSolved();o[qid]=g;store.set(SOLVED_KEY,JSON.stringify(o));}
+// 전체 문제 목록: 10문제를 다시 풀지 않아도 아무 문제나 골라 풀고 친구한테 낼 수 있다. 정답은 목록에 보이지 않는다
+function showBank(){
+  quiz.started=true;quiz.single=false;quiz.bank=false;quiz.order=[];quiz.i=0;replayFn=null;
+  const last=loadLast(),solved=loadSolved();
+  if(last)for(const a of last.log)if(!(a.qid in solved))solved[a.qid]=a.guess;
+  $('quizCard').classList.add('hidden');$('qLast').classList.add('hidden');$('qAll').classList.add('hidden');
+  const e=$('quizEnd');e.classList.remove('hidden');e.innerHTML='';
+  const n=Q.filter(q=>q.id in solved).length;
+  e.append(el('div','label',`전체 문제 ${Q.length}개 (푼 문제 ${n}개)`));
+  Q.forEach((q,idx)=>{const it=el('div','aitem'),row=el('div','wrow'),info=el('div');
+    const done=q.id in solved;
+    info.append(el('div','ctext',`${q.id.slice(1)}. ${q.t}`),el('div','m',done?`풀었어요, 내 답 A ${solved[q.id]} : B ${100-solved[q.id]}`:'아직 안 푼 문제'));
+    const b=el('button','mini',done?'다시 풀기':'풀기');
+    b.onclick=()=>{quizSingle(idx,null,true);window.scrollTo({top:0,behavior:'smooth'});};
+    row.append(info,b);it.append(row);e.append(it);});
+  const again=el('button','btn','랜덤 10문제 풀기');again.onclick=()=>{quizStart();window.scrollTo({top:0,behavior:'smooth'});};
+  e.append(again);setHint('');
 }
 // 결과 화면: 틀린 문제를 하나씩 친구한테 낸다
 function wrongList(box,log){
@@ -951,7 +976,7 @@ function wrongList(box,log){
   box.append(w);
 }
 // 친구가 보낸 문제 하나만 풀기 (?q=q07&f=70)
-function quizSingle(idx,f){$('qLast').classList.add('hidden');quiz.single=true;quiz.friend=f;quiz.order=[idx];quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
+function quizSingle(idx,f,bank){$('qLast').classList.add('hidden');$('qAll').classList.add('hidden');quiz.bank=!!bank;quiz.single=true;quiz.friend=f;quiz.order=[idx];quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
 const SHARE_BASE='https://whose-fault.nobody-asked.dev/';
 const GRADES=[
   {slug:'ace',min:.9,badge:'S등급',name:'보험사 에이스 손해사정사',tag:'블랙박스 영상만 봐도 몇 대 몇이 보이는 사람'},
@@ -976,7 +1001,7 @@ function showEnd(d,past){
   const g=GRADES.find(x=>x.slug===d.grade),pct=d.pct;
   quiz.started=true;quiz.i=quiz.order.length;replayFn=null;
   const url=`${SHARE_BASE}r/${g.slug}.html?s=${pct}`;
-  $('quizCard').classList.add('hidden');$('qLast').classList.add('hidden');const e=$('quizEnd');e.classList.remove('hidden');
+  $('quizCard').classList.add('hidden');$('qLast').classList.add('hidden');$('qAll').classList.remove('hidden');const e=$('quizEnd');e.classList.remove('hidden');
   e.innerHTML=`<div class="final"><div style="font-size:13px;color:var(--sub);font-weight:700">내 과실 판단력</div><div class="score">${pct}<span style="font-size:22px;color:var(--sub)"> / 100</span></div><div class="gbadge">${g.badge}</div><div class="grade">${g.name}</div><p>${g.tag}</p></div><button class="btn" id="qShare">결과 공유하기</button><div class="row"><a class="btn ghost" id="qPreview" target="_blank" rel="noopener">공유 페이지 보기</a><button class="btn ghost" id="qAgain">다시 도전</button></div><div id="qShareMsg"></div>`;
   $('qPreview').href=url;
   $('qAgain').onclick=()=>{quizStart();window.scrollTo({top:0,behavior:'smooth'});};
@@ -1415,6 +1440,7 @@ function renderAdmin(){
 /* ========== 시작 ========== */
 window.__fs={Q,normalize,judge,buildScene,play}; // 테스트용 훅
 capsPromise=initCaps();
+$('qAll').onclick=()=>{showBank();window.scrollTo({top:0,behavior:'smooth'});};
 {const qp=new URLSearchParams(location.search);if(qp.get('from')==='share'){const g=qp.get('g');track('share_visit',GRADES.some(x=>x.slug===g)?g:undefined);}
   const qi=Q.findIndex(x=>x.id===qp.get('q'));
   if(qi>=0){const fv=parseInt(qp.get('f'),10),f=fv>=0&&fv<=100&&fv%10===0?fv:null;track('qshare_visit',null,Q[qi].id);quizSingle(qi,f);}

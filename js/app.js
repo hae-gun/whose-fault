@@ -821,8 +821,34 @@ const paintSound=()=>{soundBtn.textContent=Sound.on?'소리 켜짐':'소리 꺼�
 soundBtn.onclick=()=>{Sound.setOn(!Sound.on);paintSound();};paintSound();
 function setHint(t){hint.textContent=t||'';}
 function ratioBar(a,b){return`<div class="bar"><div class="ba" style="flex-grow:${Math.max(a,0.0001)}">${a?'A '+a:''}</div><div class="bb" style="flex-grow:${Math.max(b,0.0001)}">${b?'B '+b:''}</div></div>`;}
+// 문제 글에서 A, B와 각자의 행동을 차 색으로 칠한다 (A 파랑, B 빨강). 글은 우리가 쓴 고정 문구지만 그래도 escape
+const escH=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const AB_RE=/(^|[^A-Za-z0-9])([AB])(?![A-Za-z0-9])/g;
+function abMarks(t){return escH(t).replace(AB_RE,(m,p,k)=>`${p}<b class="abk ${k.toLowerCase()}">${k}</b>`);}
+function abHTML(text){
+  // 문장 단위로 나눠서, 한 차만 나오면 문장 전체를 그 색으로, 둘 다 나오면 두 번째 차가 나오기 전 연결어미(고, 는데, 쉼표 등)에서 나눈다
+  const out=[];
+  for(const sen of String(text).match(/[^.!?]+[.!?]*\s*/g)||[]){
+    const hits=[...sen.matchAll(AB_RE)].map(m=>({k:m[2],i:m.index+m[1].length}));
+    // "A와 B가", "A, B 모두"처럼 둘이 같이 주어면 어느 한쪽 색으로 칠하지 않는다
+    if(!hits.length||/[AB]\s*(와|과|,|랑|하고)\s*[AB]/.test(sen)){out.push(abMarks(sen));continue;}
+    // 첫 차가 나오기 전 앞부분(장소 설명 등)은 색을 칠하지 않는다
+    const lead=sen.slice(0,hits[0].i);if(lead)out.push(escH(lead));
+    const parts=[];let from=hits[0].i,cur=hits[0].k;
+    for(const h of hits){
+      if(h.k===cur)continue;
+      const head=sen.slice(from,h.i);
+      const cut=[...head.matchAll(/(고|는데|지만|면서|어서|아서|,)\s+/g)].pop();
+      const at=cut?from+cut.index+cut[0].length:from+Math.max(0,head.lastIndexOf(' ')+1);
+      parts.push([cur,sen.slice(from,at)]);from=at;cur=h.k;
+    }
+    parts.push([cur,sen.slice(from)]);
+    for(const [k,t] of parts)if(t)out.push(`<span class="abt ${k.toLowerCase()}">${abMarks(t)}</span>`);
+  }
+  return out.join('');
+}
 function explainHTML(res){
-  let h=`<div class="reason"><b>${res.title}</b><br>${res.reason}</div><ul class="lines"><li><span>기본과실</span><b>A ${res.base[0]} : B ${res.base[1]}</b></li>`;
+  let h=`<div class="reason"><b>${abMarks(res.title)}</b><br>${abHTML(res.reason)}</div><ul class="lines"><li><span>기본과실</span><b>A ${res.base[0]} : B ${res.base[1]}</b></li>`;
   for(const l of res.lines)h+=`<li><span>${l.car} 차 ${l.label}</span><b>${l.car} ${l.d>0?'+':''}${l.d}</b></li>`;
   return h+`<li><span>최종</span><b>A ${res.final[0]} : B ${res.final[1]}</b></li></ul>`;
 }
@@ -914,7 +940,7 @@ function quizPlay(){const q=curQ();setHint('A 파란 차, B 빨간 차');play(bu
 function quizRender(){
   const q=curQ(),n=quiz.order.length;quiz.answered=false;
   $('qNum').textContent=quiz.single?(quiz.bank?'전체 문제에서 고른 문제':'친구가 보낸 문제'):`${quiz.deep?'심화 ':''}문제 ${quiz.i+1} / ${n}`;$('qScore').textContent=quiz.single?'':`${quiz.score}점`;$('qProg').style.width=quiz.single?'0':(quiz.i/n*100)+'%';
-  $('qTitle').textContent=q.t;$('qStory').textContent=q.s;renderChips($('qChips'),normalize(q.sp));
+  $('qTitle').innerHTML=abMarks(q.t);$('qStory').innerHTML=abHTML(q.s);renderChips($('qChips'),normalize(q.sp));
   setRange(gRange,50);gRange.oninput();gRange.disabled=false;
   $('qSubmit').classList.remove('hidden');$('qReveal').innerHTML='';
   quizPlay();

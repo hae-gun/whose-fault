@@ -132,6 +132,32 @@ class ApiFlowTest {
     }
 
     @Test
+    void quizStats() throws Exception {
+        String t = session();
+        mvc.perform(as(post("/api/events"), t).content("{\"kind\":\"quiz_start\"}")).andExpect(status().isNoContent());
+        mvc.perform(as(post("/api/events"), t).content("{\"kind\":\"hack\"}")).andExpect(status().isBadRequest());
+        mvc.perform(as(post("/api/quiz/results"), t).content("""
+                {"score":76,"grade":"veteran","answers":[{"qid":"q01","guess":0,"answer":0},{"qid":"q02","guess":50,"answer":20}]}"""))
+                .andExpect(status().isNoContent());
+        // 10초 안에 또 보내면 429, 잘못된 답 형식은 400
+        mvc.perform(as(post("/api/quiz/results"), t).content("{\"score\":10,\"grade\":\"newbie\"}")).andExpect(status().isTooManyRequests());
+        mvc.perform(as(post("/api/quiz/results"), session()).content("""
+                {"score":50,"grade":"otaku","answers":[{"qid":"Q 1","guess":55,"answer":0}]}""")).andExpect(status().isBadRequest());
+        mvc.perform(as(post("/api/events"), t).content("{\"kind\":\"share_click\",\"grade\":\"veteran\"}")).andExpect(status().isNoContent());
+
+        mvc.perform(get("/api/admin/quiz-stats")).andExpect(status().isForbidden());
+        JsonNode st = json(get("/api/admin/quiz-stats").header("X-Admin-Token", ADMIN));
+        assertThat(st.get("totals").get("completions").asLong()).isGreaterThanOrEqualTo(1);
+        assertThat(st.get("totals").get("starts").asLong()).isGreaterThanOrEqualTo(1);
+        assertThat(st.get("totals").get("shareClicks").asLong()).isGreaterThanOrEqualTo(1);
+        assertThat(st.get("grades").get("veteran").asLong()).isGreaterThanOrEqualTo(1);
+        assertThat(st.get("daily").size()).isEqualTo(14);
+        assertThat(st.get("daily").get(13).get("completions").asLong()).isGreaterThanOrEqualTo(1);
+        // 가장 많이 어긋난 문제가 맨 앞
+        assertThat(st.get("questions").get(0).get("qid").asText()).isEqualTo("q02");
+    }
+
+    @Test
     void badSpecIsRejected() throws Exception {
         String t = session();
         mvc.perform(as(post("/api/cases"), t).content("{\"title\":\"x\",\"spec\":{\"map\":\"moon\"}}")).andExpect(status().isBadRequest());

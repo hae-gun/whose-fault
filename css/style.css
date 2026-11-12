@@ -144,3 +144,6 @@ details.stddet summary{cursor:pointer;font-size:13px;font-weight:700}
 .aitem{padding:10px 0;border-bottom:1px solid var(--soft)}
 .soundbtn{position:absolute;left:12px;bottom:12px;border:0;background:rgba(255,255,255,.92);border-radius:999px;padding:7px 12px;font:700 12px 'Noto Sans KR';color:var(--ink);box-shadow:0 2px 8px rgba(0,0,0,.12);cursor:pointer}
 .soundbtn.off{color:var(--sub);background:rgba(255,255,255,.75)}
+.kgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.kbox{background:var(--soft);border-radius:12px;padding:10px 12px}
+.kv{font-size:24px;font-weight:900;letter-spacing:-.5px;margin:2px 0}

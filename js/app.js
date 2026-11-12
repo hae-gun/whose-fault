@@ -850,38 +850,40 @@ function setMode(m){
 
 /* ========== 맞히기 ========== */
 const Q=[
- {t:'빨간불에 달려든 차',s:'A는 녹색 신호를 받고 직진했어요. 옆길의 B는 빨간불인데 그대로 교차로에 들어왔어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'G'},B:{arm:'W',man:'straight',light:'R'}}},
- {t:'녹색불 비보호 좌회전',s:'녹색 신호에서 A는 직진, 마주 오던 B는 좌회전 화살표 없이 비보호로 좌회전했어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'G'},B:{arm:'N',man:'left',light:'G'}}},
- {t:'비보호 좌회전, 그런데 직진차가 과속',s:'앞 상황과 같은데 직진하던 A가 제한속도 50km/h 도로를 75km/h로 달리고 있었어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'G',speed:75},B:{arm:'N',man:'left',light:'G',speed:30}}},
- {t:'좌회전 신호에 직진한 맞은편 차',s:'A는 좌회전 신호를 받고 좌회전했어요. 맞은편 B는 같은 좌회전 신호인데 그냥 직진해버렸어요.',sp:{map:'sig',A:{arm:'S',man:'left',light:'L',speed:35},B:{arm:'N',man:'straight',light:'L'}}},
- {t:'신호위반 차, 그런데 나는 95km/h',s:'B가 빨간불에 들어왔지만, 녹색불에 직진한 A는 제한 50km/h 도로를 95km/h로 달리고 있었어요.',sp:{map:'sig',A:{arm:'E',man:'straight',light:'G',speed:95},B:{arm:'S',man:'straight',light:'R'}}},
- {t:'노란불 꼬리물기',s:'A가 노란불에 교차로로 들어갔다가 앞이 막혀 빠져나가지 못했어요. 그 사이 옆길 B가 녹색불을 받고 출발해 부딪혔어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'Y',speed:30},B:{arm:'W',man:'straight',light:'G',speed:30}}},
- {t:'신호 받고 유턴 vs 우회전',s:'왕복 4차로 사거리에서 A는 좌회전 신호에 맞춰 유턴했어요. 왼쪽 길의 B는 빨간불에 우회전하다 유턴하던 A와 부딪혔어요.',sp:{map:'sig4',A:{arm:'S',man:'uturn',light:'L',ut:'signal',speed:20},B:{arm:'W',man:'right',light:'R',speed:25}}},
- {t:'상시 유턴 vs 우회전',s:'같은 장면인데 여기는 신호와 상관없이 유턴할 수 있는 상시 유턴 구역이었어요.',sp:{map:'sig4',A:{arm:'S',man:'uturn',light:'G',ut:'always',speed:20},B:{arm:'W',man:'right',light:'R',speed:25}}},
- {t:'4차로 사거리 비보호 좌회전',s:'왕복 4차로 사거리 녹색 신호에서 A는 2차로로 직진, 맞은편 B는 1차로에서 비보호 좌회전했어요.',sp:{map:'sig4',A:{arm:'S',man:'straight',light:'G',li:2,lo:2},B:{arm:'N',man:'left',light:'G',speed:30}}},
- {t:'유턴 금지인데 유턴',s:'유턴 금지 표지가 있는 곳에서 B가 유턴하다 직진하던 A와 부딪혔어요.',sp:{map:'nosig_eq',A:{arm:'N',man:'straight'},B:{arm:'S',man:'uturn',ut:'illegal',speed:15}}},
- {t:'점멸 신호 좌회전',s:'점멸 신호 교차로에서 적색 점멸 쪽 A가 좌회전하다 황색 점멸 쪽에서 직진하던 B와 부딪혔어요.',sp:{map:'flash',A:{arm:'S',man:'left',light:'RF',speed:25},B:{arm:'E',man:'straight',light:'YF',speed:40}}},
- {t:'신호 없는 교차로의 눈치싸움',s:'신호등 없는 같은 폭 교차로에서 A는 아래쪽, B는 오른쪽 길에서 동시에 직진했어요.',sp:{map:'nosig_eq',A:{arm:'S',man:'straight',speed:40},B:{arm:'E',man:'straight',speed:40}}},
- {t:'내가 먼저 들어갔는데요',s:'같은 상황인데 A가 누가 봐도 확실하게 먼저 교차로에 들어가 있었어요.',sp:{map:'nosig_eq',A:{arm:'S',man:'straight',speed:40},B:{arm:'E',man:'straight',speed:40},mods:{A:['first']}}},
- {t:'큰길 vs 골목길',s:'A는 왕복 4차로 대로를 직진, B는 좁은 소로에서 나와 대로를 가로질렀어요. 신호등은 없어요.',sp:{map:'nosig_main',A:{arm:'W',man:'straight'},B:{arm:'S',man:'straight',speed:30}}},
- {t:'신호 없는 곳의 좌회전',s:'신호 없는 교차로에서 A는 직진, 맞은편 B는 좌회전하다 부딪혔어요.',sp:{map:'nosig_eq',A:{arm:'S',man:'straight',speed:45},B:{arm:'N',man:'left',speed:25}}},
- {t:'깜빡이는 신호등',s:'밤이라 신호등이 점멸 중이에요. A 쪽은 황색 점멸, B 쪽은 적색 점멸이었는데 둘 다 멈추지 않고 직진했어요.',sp:{map:'flash',A:{arm:'S',man:'straight',light:'YF',speed:40},B:{arm:'E',man:'straight',light:'RF',speed:40}}},
- {t:'삼거리에서 튀어나온 차',s:'삼거리에서 A는 큰길을 직진, B는 아래쪽 옆길에서 좌회전해 큰길로 나왔어요.',sp:{map:'tee',A:{arm:'W',man:'straight'},B:{arm:'S',man:'left',speed:25}}},
- {t:'회전교차로 진입',s:'A는 이미 회전교차로를 돌고 있었고, B는 아래쪽 길에서 회전교차로로 진입했어요.',sp:{map:'round',A:{role:'ring',from:'N',to:'E',speed:30},B:{role:'enter',from:'S',to:'W',speed:30}}},
- {t:'주차장 출차 사고',s:'A는 주차장 통로를 지나가고 있었고, B는 주차칸에서 앞으로 빠져나오다 부딪혔어요.',sp:{map:'park',A:{role:'aisle',speed:15},B:{role:'exit',speed:8}}},
- {t:'추월하다 정면충돌',s:'왕복 2차로에서 B가 앞차를 추월하려고 중앙선을 넘었다가 마주 오던 A와 부딪혔어요.',sp:{map:'two',A:{dir:'down'},B:{dir:'up',invade:true,zone:760,speed:70}}},
- {t:'끼어들기 사고',s:'2차로를 달리던 A 앞으로 1차로의 B가 깜빡이를 켜고 들어왔어요.',sp:{map:'road2',A:{lane:2,to:2,speed:70},B:{lane:1,to:2,speed:50},rear:'A'}},
- {t:'깜빡이 없는 칼치기',s:'같은 끼어들기인데 B가 깜빡이를 켜지 않았어요.',sp:{map:'road2',A:{lane:2,to:2,speed:70},B:{lane:1,to:2,speed:50},rear:'A',mods:{B:['noBlink']}}},
- {t:'양쪽에서 가운데로',s:'편도 3차로에서 1차로의 A와 3차로의 B가 동시에 2차로로 들어왔어요.',sp:{map:'road3',A:{lane:1,to:2,speed:70},B:{lane:3,to:2,speed:70}}},
- {t:'동시에 차로를 바꿨다',s:'나란히 달리던 A와 B가 같은 순간 서로의 차로로 들어갔어요.',sp:{map:'road2',A:{lane:1,to:2},B:{lane:2,to:1},rear:'A'}},
- {t:'정차한 앞차를 꽝',s:'B가 앞에서 서행하다 멈췄는데 뒤따르던 A가 그대로 들이받았어요.',sp:{map:'road2',A:{lane:1,to:1,speed:60},B:{lane:1,to:1,speed:40},rear:'A'}},
- {t:'이유 없이 급정거한 앞차',s:'B가 아무 이유 없이 갑자기 급브레이크를 밟았고, 뒤따르던 A가 추돌했어요.',sp:{map:'road2',A:{lane:2,to:2},B:{lane:2,to:2},rear:'A',mods:{B:['suddenStop']}}}
+{id:'q01',t:'빨간불에 달려든 차',s:'A는 녹색 신호를 받고 직진했어요. 옆길의 B는 빨간불인데 그대로 교차로에 들어왔어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'G'},B:{arm:'W',man:'straight',light:'R'}}},
+{id:'q02',t:'녹색불 비보호 좌회전',s:'녹색 신호에서 A는 직진, 마주 오던 B는 좌회전 화살표 없이 비보호로 좌회전했어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'G'},B:{arm:'N',man:'left',light:'G'}}},
+{id:'q03',t:'비보호 좌회전, 그런데 직진차가 과속',s:'앞 상황과 같은데 직진하던 A가 제한속도 50km/h 도로를 75km/h로 달리고 있었어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'G',speed:75},B:{arm:'N',man:'left',light:'G',speed:30}}},
+{id:'q04',t:'좌회전 신호에 직진한 맞은편 차',s:'A는 좌회전 신호를 받고 좌회전했어요. 맞은편 B는 같은 좌회전 신호인데 그냥 직진해버렸어요.',sp:{map:'sig',A:{arm:'S',man:'left',light:'L',speed:35},B:{arm:'N',man:'straight',light:'L'}}},
+{id:'q05',t:'신호위반 차, 그런데 나는 95km/h',s:'B가 빨간불에 들어왔지만, 녹색불에 직진한 A는 제한 50km/h 도로를 95km/h로 달리고 있었어요.',sp:{map:'sig',A:{arm:'E',man:'straight',light:'G',speed:95},B:{arm:'S',man:'straight',light:'R'}}},
+{id:'q06',t:'노란불 꼬리물기',s:'A가 노란불에 교차로로 들어갔다가 앞이 막혀 빠져나가지 못했어요. 그 사이 옆길 B가 녹색불을 받고 출발해 부딪혔어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'Y',speed:30},B:{arm:'W',man:'straight',light:'G',speed:30}}},
+{id:'q07',t:'신호 받고 유턴 vs 우회전',s:'왕복 4차로 사거리에서 A는 좌회전 신호에 맞춰 유턴했어요. 왼쪽 길의 B는 빨간불에 우회전하다 유턴하던 A와 부딪혔어요.',sp:{map:'sig4',A:{arm:'S',man:'uturn',light:'L',ut:'signal',speed:20},B:{arm:'W',man:'right',light:'R',speed:25}}},
+{id:'q08',t:'상시 유턴 vs 우회전',s:'같은 장면인데 여기는 신호와 상관없이 유턴할 수 있는 상시 유턴 구역이었어요.',sp:{map:'sig4',A:{arm:'S',man:'uturn',light:'G',ut:'always',speed:20},B:{arm:'W',man:'right',light:'R',speed:25}}},
+{id:'q09',t:'4차로 사거리 비보호 좌회전',s:'왕복 4차로 사거리 녹색 신호에서 A는 2차로로 직진, 맞은편 B는 1차로에서 비보호 좌회전했어요.',sp:{map:'sig4',A:{arm:'S',man:'straight',light:'G',li:2,lo:2},B:{arm:'N',man:'left',light:'G',speed:30}}},
+{id:'q10',t:'유턴 금지인데 유턴',s:'유턴 금지 표지가 있는 곳에서 B가 유턴하다 직진하던 A와 부딪혔어요.',sp:{map:'nosig_eq',A:{arm:'N',man:'straight'},B:{arm:'S',man:'uturn',ut:'illegal',speed:15}}},
+{id:'q11',t:'점멸 신호 좌회전',s:'점멸 신호 교차로에서 적색 점멸 쪽 A가 좌회전하다 황색 점멸 쪽에서 직진하던 B와 부딪혔어요.',sp:{map:'flash',A:{arm:'S',man:'left',light:'RF',speed:25},B:{arm:'E',man:'straight',light:'YF',speed:40}}},
+{id:'q12',t:'신호 없는 교차로의 눈치싸움',s:'신호등 없는 같은 폭 교차로에서 A는 아래쪽, B는 오른쪽 길에서 동시에 직진했어요.',sp:{map:'nosig_eq',A:{arm:'S',man:'straight',speed:40},B:{arm:'E',man:'straight',speed:40}}},
+{id:'q13',t:'내가 먼저 들어갔는데요',s:'같은 상황인데 A가 누가 봐도 확실하게 먼저 교차로에 들어가 있었어요.',sp:{map:'nosig_eq',A:{arm:'S',man:'straight',speed:40},B:{arm:'E',man:'straight',speed:40},mods:{A:['first']}}},
+{id:'q14',t:'큰길 vs 골목길',s:'A는 왕복 4차로 대로를 직진, B는 좁은 소로에서 나와 대로를 가로질렀어요. 신호등은 없어요.',sp:{map:'nosig_main',A:{arm:'W',man:'straight'},B:{arm:'S',man:'straight',speed:30}}},
+{id:'q15',t:'신호 없는 곳의 좌회전',s:'신호 없는 교차로에서 A는 직진, 맞은편 B는 좌회전하다 부딪혔어요.',sp:{map:'nosig_eq',A:{arm:'S',man:'straight',speed:45},B:{arm:'N',man:'left',speed:25}}},
+{id:'q16',t:'깜빡이는 신호등',s:'밤이라 신호등이 점멸 중이에요. A 쪽은 황색 점멸, B 쪽은 적색 점멸이었는데 둘 다 멈추지 않고 직진했어요.',sp:{map:'flash',A:{arm:'S',man:'straight',light:'YF',speed:40},B:{arm:'E',man:'straight',light:'RF',speed:40}}},
+{id:'q17',t:'삼거리에서 튀어나온 차',s:'삼거리에서 A는 큰길을 직진, B는 아래쪽 옆길에서 좌회전해 큰길로 나왔어요.',sp:{map:'tee',A:{arm:'W',man:'straight'},B:{arm:'S',man:'left',speed:25}}},
+{id:'q18',t:'회전교차로 진입',s:'A는 이미 회전교차로를 돌고 있었고, B는 아래쪽 길에서 회전교차로로 진입했어요.',sp:{map:'round',A:{role:'ring',from:'N',to:'E',speed:30},B:{role:'enter',from:'S',to:'W',speed:30}}},
+{id:'q19',t:'주차장 출차 사고',s:'A는 주차장 통로를 지나가고 있었고, B는 주차칸에서 앞으로 빠져나오다 부딪혔어요.',sp:{map:'park',A:{role:'aisle',speed:15},B:{role:'exit',speed:8}}},
+{id:'q20',t:'추월하다 정면충돌',s:'왕복 2차로에서 B가 앞차를 추월하려고 중앙선을 넘었다가 마주 오던 A와 부딪혔어요.',sp:{map:'two',A:{dir:'down'},B:{dir:'up',invade:true,zone:760,speed:70}}},
+{id:'q21',t:'끼어들기 사고',s:'2차로를 달리던 A 앞으로 1차로의 B가 깜빡이를 켜고 들어왔어요.',sp:{map:'road2',A:{lane:2,to:2,speed:70},B:{lane:1,to:2,speed:50},rear:'A'}},
+{id:'q22',t:'깜빡이 없는 칼치기',s:'같은 끼어들기인데 B가 깜빡이를 켜지 않았어요.',sp:{map:'road2',A:{lane:2,to:2,speed:70},B:{lane:1,to:2,speed:50},rear:'A',mods:{B:['noBlink']}}},
+{id:'q23',t:'양쪽에서 가운데로',s:'편도 3차로에서 1차로의 A와 3차로의 B가 동시에 2차로로 들어왔어요.',sp:{map:'road3',A:{lane:1,to:2,speed:70},B:{lane:3,to:2,speed:70}}},
+{id:'q24',t:'동시에 차로를 바꿨다',s:'나란히 달리던 A와 B가 같은 순간 서로의 차로로 들어갔어요.',sp:{map:'road2',A:{lane:1,to:2},B:{lane:2,to:1},rear:'A'}},
+{id:'q25',t:'정차한 앞차를 꽝',s:'B가 앞에서 서행하다 멈췄는데 뒤따르던 A가 그대로 들이받았어요.',sp:{map:'road2',A:{lane:1,to:1,speed:60},B:{lane:1,to:1,speed:40},rear:'A'}},
+{id:'q26',t:'이유 없이 급정거한 앞차',s:'B가 아무 이유 없이 갑자기 급브레이크를 밟았고, 뒤따르던 A가 추돌했어요.',sp:{map:'road2',A:{lane:2,to:2},B:{lane:2,to:2},rear:'A',mods:{B:['suddenStop']}}}
 ];
 const quiz={order:[],i:0,score:0,answered:false,started:false};
 const gRange=$('gRange');
 gRange.oninput=()=>{const v=+gRange.value;$('gA').textContent=v;$('gB').textContent=100-v;gRange.style.setProperty('--p',v+'%');};
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function quizStart(){quiz.order=shuffle(Q.map((_,i)=>i)).slice(0,10);quiz.i=0;quiz.score=0;quiz.started=true;$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
+// 익명 사용 기록. 서버 연결이 준비된 뒤에 보내고, 실패해도 게임에는 영향 없음
+function track(kind,grade){(capsPromise||Promise.resolve()).then(()=>{if(apiOk)api('POST','/api/events',grade?{kind,grade}:{kind}).catch(()=>{});});}
+function quizStart(){quiz.order=shuffle(Q.map((_,i)=>i)).slice(0,10);quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
 function quizShow(){if(!quiz.started)quizStart();else if(quiz.i<quiz.order.length)quizPlay();else replayFn=null;}
 function quizPlay(){const q=Q[quiz.order[quiz.i]];setHint('A 파란 차, B 빨간 차');play(buildScene(q.sp),()=>setHint(quiz.answered?'':'몇 대 몇일까요?'));replayFn=()=>play(buildScene(q.sp));}
 function quizRender(){
@@ -895,6 +897,8 @@ function quizRender(){
 $('qSubmit').onclick=()=>{
   if(quiz.answered)return;quiz.answered=true;
   const q=Q[quiz.order[quiz.i]],res=judge(normalize(q.sp)),g=+gRange.value,diff=Math.abs(g-res.final[0]);
+  quiz.log.push({qid:q.id,guess:g,answer:res.final[0]});
+  if(quiz.log.length===1)track('quiz_start'); // 페이지만 열고 안 푼 사람은 세지 않게 첫 답에서 센다
   const pts=diff===0?10:diff===10?6:diff===20?3:0;quiz.score+=pts;$('qScore').textContent=`${quiz.score}점`;
   const v=diff===0?['good','정확해요! +10점']:diff<=20?['mid',`아깝다! ${diff}만큼 차이 +${pts}점`]:['bad',`꽤 달라요. ${diff}만큼 차이`];
   gRange.disabled=true;$('qSubmit').classList.add('hidden');
@@ -918,8 +922,9 @@ function quizEnd(){
   e.innerHTML=`<div class="final"><div style="font-size:13px;color:var(--sub);font-weight:700">내 과실 판단력</div><div class="score">${pct}<span style="font-size:22px;color:var(--sub)"> / 100</span></div><div class="gbadge">${g.badge}</div><div class="grade">${g.name}</div><p>${g.tag}</p></div><button class="btn" id="qShare">결과 공유하기</button><div class="row"><a class="btn ghost" id="qPreview" target="_blank" rel="noopener">공유 페이지 보기</a><button class="btn ghost" id="qAgain">다시 도전</button></div><div id="qShareMsg"></div>`;
   $('qPreview').href=url;
   $('qAgain').onclick=quizStart;
-  if(apiOk)api('PUT','/api/players/me',{best:pct}).catch(()=>{});
+  const log=quiz.log.slice();(capsPromise||Promise.resolve()).then(()=>{if(apiOk)api('POST','/api/quiz/results',{score:pct,grade:g.slug,answers:log}).catch(()=>{});});
   $('qShare').onclick=async()=>{
+    track('share_click',g.slug);
     const text=`몇 대 몇? 과실비율 퀴즈 ${pct}점, 내 등급은 "${g.name}" (${g.badge})! 당신의 과실 판단력은?`;
     try{if(navigator.share){await navigator.share({title:'몇 대 몇? 과실비율 퀴즈',text,url});return;}}catch(err){if(err&&err.name==='AbortError')return;}
     try{await navigator.clipboard.writeText(text+'\n'+url);$('qShareMsg').innerHTML='<div class="msg">링크를 복사했어요. 카톡에 붙여넣으면 등급 카드가 함께 보여요.</div>';}
@@ -1030,6 +1035,7 @@ $('upBtn').onclick=async()=>{
 
 /* ========== 판결 투표 (whose-fault-api 서버) ========== */
 const API_BASE=(window.WF_CONFIG&&window.WF_CONFIG.apiBase)||'';
+let capsPromise=null;
 const POLL_MS=5000,LIST_MS=30000;
 let apiOk=false,token=null,adminToken=null,isOwner=false,cases=[],sel=null,pendingSelect=null,state=null,pollTimer=null,listTimer=null,cSort='best',lastPost=0;
 const CHOICES=[{k:'A100',a:100,t:'A 100%'},{k:'Amore',a:70,t:'A가 더 잘못'},{k:'half',a:50,t:'반반'},{k:'Bmore',a:30,t:'B가 더 잘못'},{k:'B100',a:0,t:'B 100%'}];
@@ -1264,7 +1270,7 @@ async function adminDelete(type,tid,btn){
 }
 
 /* ========== 관리자 ========== */
-let adminReports=[],adminComments=[];
+let adminReports=[],adminComments=[],adminStats=null;
 function adminEnter(){
   A.preview=null;setHint('');stopPolling();
   if(!isOwner){renderAdminLogin();return;}
@@ -1281,14 +1287,41 @@ function renderAdminLogin(msg){
   c.append(inp,b,m);box.append(c);
 }
 async function loadAdmin(){
-  try{[adminReports,adminComments]=await Promise.all([api('GET','/api/admin/reports'),api('GET','/api/admin/comments?limit=100')]);renderAdmin();}
+  try{[adminReports,adminComments,adminStats]=await Promise.all([api('GET','/api/admin/reports'),api('GET','/api/admin/comments?limit=100'),api('GET','/api/admin/quiz-stats').catch(()=>null)]);renderAdmin();}
   catch(err){if(err.status===403){isOwner=false;adminToken=null;store.set('wf_admin',null);renderAdminLogin('관리자 토큰이 만료됐거나 바뀌었어요.');}else flash(errText(err));}
+}
+function statsCard(st){
+  const c=el('div','card'),T=st.totals||{};c.append(el('div','label','퀴즈 통계 (시작은 첫 문제에 답한 수)'));
+  const pct=(a,b)=>b?Math.round(a/b*100)+'%':'-';
+  const grid=el('div','kgrid');
+  for(const [k,v,sub] of [['오늘 완료',T.completionsToday,`시작 ${T.startsToday||0}`],['누적 완료',T.completions,`시작 ${T.starts||0}, 완주율 ${pct(T.completions,T.starts)}`],
+    ['푼 사람',T.players,`오늘 ${T.playersToday||0}명`],['평균 점수',T.avgScore==null?'-':Math.round(T.avgScore),'100점 만점'],
+    ['공유 클릭',T.shareClicks,`완료 대비 ${pct(T.shareClicks,T.completions)}`],['공유로 유입',T.shareVisits,`클릭 대비 ${pct(T.shareVisits,T.shareClicks)}`]]){
+    const b=el('div','kbox');b.append(el('div','m',k),el('div','kv',String(v==null?0:v)),el('div','m',sub));grid.append(b);}
+  c.append(grid);
+  c.append(el('div','label','등급 분포'));
+  const gs=st.grades||{},gt=Object.values(gs).reduce((a,b)=>a+b,0);
+  for(const g of GRADES){const n=gs[g.slug]||0,row=el('div','drow');row.append(el('span','dl',g.badge),Object.assign(el('div','db'),{}),el('span','dp',pct(n,gt)));
+    const f=el('i');f.style.width=(gt?n/gt*100:0)+'%';row.children[1].append(f);c.append(row);}
+  c.append(el('div','label','최근 14일 퀴즈 완료 수 (아래 숫자는 날짜, 막대에 손을 대면 시작 수)'));
+  const days=st.daily||[],mx=Math.max(1,...days.map(d=>d.completions)),h=el('div','hist');
+  for(const d of days){const b=el('div');b.style.height=(d.completions/mx*100)+'%';b.title=`${d.day} 시작 ${d.starts} 완료 ${d.completions}`;h.append(b);}
+  c.append(h);const hl=el('div','hlabels');for(const d of days)hl.append(el('span',null,d.day.slice(8)));c.append(hl);
+  c.append(el('div','label','사람들이 가장 많이 틀린 사고'));
+  const qs=(st.questions||[]).slice(0,8);
+  if(!qs.length)c.append(el('div','msg','아직 기록이 없어요.'));
+  for(const q of qs){const item=Q.find(x=>x.id===q.qid),it=el('div','aitem');
+    it.append(el('div','ctext',item?item.t:q.qid));
+    it.append(el('div','m',`${q.n}명 / 정확히 맞힘 ${pct(q.exact,q.n)} / 평균 ${Math.round(q.avgDiff)}만큼 차이 / 사람들 평균 A ${Math.round(q.avgGuess)} vs 기준 A ${q.answer}`));
+    c.append(it);}
+  return c;
 }
 function renderAdmin(){
   const box=$('adminBox');if(!box||!isOwner||mode!=='admin')return;box.innerHTML='';
   const bar=el('div','rowmini');const rf=el('button','mini','새로고침');rf.onclick=()=>{loadCases();loadAdmin();};
   const lo=el('button','mini','관리자 로그아웃');lo.onclick=()=>{isOwner=false;adminToken=null;store.set('wf_admin',null);renderAdminLogin();if(sel)renderVoteDetail();};
   bar.append(rf,lo);box.append(bar);
+  if(adminStats)box.append(statsCard(adminStats));
   const c1=el('div','card');c1.append(el('div','label',`신고 접수 (${adminReports.length}건)`));
   if(!adminReports.length)c1.append(el('div','msg','처리할 신고가 없어요.'));
   for(const g of adminReports){
@@ -1315,6 +1348,7 @@ function renderAdmin(){
 
 /* ========== 시작 ========== */
 window.__fs={Q,normalize,judge,buildScene,play}; // 테스트용 훅
+capsPromise=initCaps();
+{const qp=new URLSearchParams(location.search);if(qp.get('from')==='share'){const g=qp.get('g');track('share_visit',GRADES.some(x=>x.slug===g)?g:undefined);}}
 quizStart();
-initCaps();
 })();

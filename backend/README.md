@@ -45,7 +45,10 @@ export $(grep -v '^#' .env | xargs)
 | DELETE | /api/comments/{id} | 내 댓글 또는 관리자 |
 | PUT, DELETE | /api/comments/{id}/like | 공감, 공감 취소 |
 | POST | /api/reports | `{type: case\|comment, targetId, reason}` 같은 사람 중복 신고는 사유만 갱신 |
-| PUT | /api/players/me | `{best}` 퀴즈 최고점 (베테랑 배지용, 조작 가능하니 배지 이상 의미 없음) |
+| PUT | /api/players/me | `{best}` 퀴즈 최고점 (예전 방식, 지금 프론트는 /api/quiz/results 사용) |
+| POST | /api/quiz/results | `{score, grade, answers:[{qid, guess, answer}]}` 퀴즈 완료 기록. 최고점(베테랑 배지)도 함께 갱신. 10초에 1번 |
+| POST | /api/events | `{kind: quiz_start\|share_click\|share_visit, grade}` 가벼운 사용 기록 |
+| GET | /api/admin/quiz-stats | 완료, 시작, 푼 사람, 평균 점수, 공유 클릭과 유입, 등급 분포, 최근 14일, 문제별 정답률 |
 | GET | /api/admin/me | 관리자 토큰 확인 |
 | GET | /api/admin/reports | 신고를 대상별로 묶어서, 미리보기 포함 |
 | POST | /api/admin/reports/dismiss | `{type, targetId}` 신고 기각 |

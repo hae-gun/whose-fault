@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class QuizController {
 
     public record ResultRequest(Integer score, String grade, List<Answer> answers) {}
-    public record EventRequest(String kind, String grade) {}
+    public record EventRequest(String kind, String grade, String qid) {}
 
     private final Auth auth;
     private final QuizService quiz;
@@ -33,11 +33,11 @@ public class QuizController {
         quiz.saveResult(auth.requireUid(req), body.score(), body.grade(), body.answers());
     }
 
-    /** quiz_start, share_click, share_visit */
+    /** quiz_start, share_click, share_visit, 그리고 문제 하나 공유(qshare_click, qshare_visit, qshare_answer, qid 필수) */
     @PostMapping("/api/events")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void event(@RequestBody EventRequest body, HttpServletRequest req) {
-        quiz.event(auth.requireUid(req), body.kind(), body.grade());
+        quiz.event(auth.requireUid(req), body.kind(), body.grade(), body.qid());
     }
 
     @GetMapping("/api/admin/quiz-stats")

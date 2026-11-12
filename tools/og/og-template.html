@@ -55,6 +55,7 @@ body{font-family:'Noto Sans CJK KR','Noto Sans KR',sans-serif;background:#f3f1ec
 const q=new URLSearchParams(location.search);
 for(const k of['lead','grade','tag','cta','badge'])if(q.has(k))document.getElementById(k).textContent=q.get(k);
 if(q.has('c'))document.getElementById('badge').style.setProperty('--c',q.get('c'));
+if(q.has('ts'))document.getElementById('tag').style.fontSize=q.get('ts');
 if(q.has('gs'))document.getElementById('grade').style.setProperty('--gs',q.get('gs'));
 if(q.has('ra')){const [a,b]=q.get('ra').split(':');document.querySelector('#ratio .a').textContent=a;document.querySelector('#ratio .b').textContent=b;}
 if(q.get('nobadge'))document.getElementById('badge').remove();

@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 public class QuizRepository {
 
     public record Answer(String qid, int guess, int answer) {}
+    public record ShareStat(String qid, long clicks, long visits, long answers) {}
+    public record KindCount(String qid, String kind, long n) {}
     public record QuestionStat(String qid, int n, int exact, double avgDiff, double avgGuess, int answer) {}
 
     private final JdbcClient jdbc;
@@ -27,9 +29,14 @@ public class QuizRepository {
                 .param("r", resultId).param("q", a.qid()).param("g", a.guess()).param("a", a.answer()).param("t", now).update();
     }
 
-    public void insertEvent(String kind, String grade, String uid, long now) {
-        jdbc.sql("INSERT INTO events (kind, grade, uid, created_at) VALUES (:k, :g, :u, :t)")
-                .param("k", kind).param("g", grade).param("u", uid).param("t", now).update();
+    public void insertEvent(String kind, String grade, String qid, String uid, long now) {
+        jdbc.sql("INSERT INTO events (kind, grade, qid, uid, created_at) VALUES (:k, :g, :q, :u, :t)")
+                .param("k", kind).param("g", grade).param("q", qid).param("u", uid).param("t", now).update();
+    }
+
+    public List<KindCount> shareCounts() {
+        return jdbc.sql("SELECT qid, kind, COUNT(*) AS n FROM events WHERE qid IS NOT NULL AND kind LIKE 'qshare%' GROUP BY qid, kind")
+                .query((rs, i) -> new KindCount(rs.getString("qid"), rs.getString("kind"), rs.getLong("n"))).list();
     }
 
     public long countResults(long since) {

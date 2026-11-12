@@ -6,6 +6,7 @@ import dev.nobodyasked.whosefault.common.RateLimiter;
 import dev.nobodyasked.whosefault.players.PlayerRepository;
 import dev.nobodyasked.whosefault.quiz.QuizRepository.Answer;
 import dev.nobodyasked.whosefault.quiz.QuizRepository.QuestionStat;
+import dev.nobodyasked.whosefault.quiz.QuizRepository.ShareStat;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -23,7 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class QuizService {
 
     public static final Set<String> GRADES = Set.of("ace", "veteran", "otaku", "newbie", "relicense");
-    public static final Set<String> EVENT_KINDS = Set.of("quiz_start", "share_click", "share_visit");
+    public static final Set<String> EVENT_KINDS = Set.of("quiz_start", "share_click", "share_visit",
+            "qshare_click", "qshare_visit", "qshare_answer");
     private static final Pattern QID = Pattern.compile("[a-z0-9_]{1,16}");
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
     static final int DAYS = 14;
@@ -31,7 +33,8 @@ public class QuizService {
     public record DayRow(String day, long starts, long completions) {}
     public record Totals(long completions, long players, long completionsToday, long playersToday,
                          long starts, long startsToday, Double avgScore, long shareClicks, long shareVisits) {}
-    public record Stats(Totals totals, Map<String, Long> grades, List<DayRow> daily, List<QuestionStat> questions) {}
+    public record Stats(Totals totals, Map<String, Long> grades, List<DayRow> daily, List<QuestionStat> questions,
+                        List<ShareStat> shares) {}
 
     private final QuizRepository repo;
     private final PlayerRepository players;
@@ -62,11 +65,13 @@ public class QuizService {
         players.saveBest(uid, score, now);
     }
 
-    public void event(String uid, String kind, String grade) {
+    public void event(String uid, String kind, String grade, String qid) {
         if (!EVENT_KINDS.contains(kind)) throw ApiException.badRequest("invalid_kind", "알 수 없는 이벤트예요.");
         String g = GRADES.contains(grade) ? grade : null;
+        String q = qid != null && QID.matcher(qid).matches() ? qid : null;
+        if (kind.startsWith("qshare_") && q == null) throw ApiException.badRequest("invalid_qid", "문제 번호가 올바르지 않아요.");
         if (!limiter.tryAcquire("event:" + uid, 60, 3_600_000)) return; // 넘치면 조용히 버린다
-        repo.insertEvent(kind, g, uid, System.currentTimeMillis());
+        repo.insertEvent(kind, g, q, uid, System.currentTimeMillis());
     }
 
     public Stats stats() {
@@ -89,7 +94,22 @@ public class QuizService {
 
         List<QuestionStat> qs = new ArrayList<>(repo.questionStats());
         qs.sort(Comparator.comparingDouble(QuestionStat::avgDiff).reversed());
-        return new Stats(totals, grades, daily, qs);
+
+        // 문제별 공유: 많이 공유된 문제가 맨 앞
+        Map<String, long[]> sh = new LinkedHashMap<>();
+        for (QuizRepository.KindCount r : repo.shareCounts()) {
+            long[] v = sh.computeIfAbsent(r.qid(), k -> new long[3]);
+            switch (r.kind()) {
+                case "qshare_click" -> v[0] += r.n();
+                case "qshare_visit" -> v[1] += r.n();
+                case "qshare_answer" -> v[2] += r.n();
+                default -> { }
+            }
+        }
+        List<ShareStat> shares = new ArrayList<>();
+        sh.forEach((q, v) -> shares.add(new ShareStat(q, v[0], v[1], v[2])));
+        shares.sort(Comparator.comparingLong(ShareStat::clicks).thenComparingLong(ShareStat::visits).reversed());
+        return new Stats(totals, grades, daily, qs, shares);
     }
 
     private static void bump(Map<LocalDate, long[]> days, long epochMs, int idx) {

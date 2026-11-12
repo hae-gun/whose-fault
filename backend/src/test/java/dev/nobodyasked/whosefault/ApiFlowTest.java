@@ -149,6 +149,11 @@ class ApiFlowTest {
                 {"score":50,"grade":"otaku","answers":[{"qid":"Q 1","guess":55,"answer":0}]}""")).andExpect(status().isBadRequest());
         mvc.perform(as(post("/api/events"), t).content("{\"kind\":\"share_click\",\"grade\":\"veteran\"}")).andExpect(status().isNoContent());
 
+        // 문제 하나 공유: qid가 없으면 400, 있으면 문제별로 센다
+        mvc.perform(as(post("/api/events"), t).content("{\"kind\":\"qshare_click\"}")).andExpect(status().isBadRequest());
+        mvc.perform(as(post("/api/events"), t).content("{\"kind\":\"qshare_click\",\"qid\":\"q07\"}")).andExpect(status().isNoContent());
+        mvc.perform(as(post("/api/events"), t).content("{\"kind\":\"qshare_visit\",\"qid\":\"q07\"}")).andExpect(status().isNoContent());
+
         mvc.perform(get("/api/admin/quiz-stats")).andExpect(status().isForbidden());
         JsonNode st = json(get("/api/admin/quiz-stats").header("X-Admin-Token", ADMIN));
         assertThat(st.get("totals").get("completions").asLong()).isGreaterThanOrEqualTo(1);
@@ -159,6 +164,10 @@ class ApiFlowTest {
         assertThat(st.get("daily").get(13).get("completions").asLong()).isGreaterThanOrEqualTo(1);
         // 가장 많이 어긋난 문제가 맨 앞
         assertThat(st.get("questions").get(0).get("qid").asText()).isEqualTo("q02");
+        JsonNode share = st.get("shares").get(0);
+        assertThat(share.get("qid").asText()).isEqualTo("q07");
+        assertThat(share.get("clicks").asLong()).isEqualTo(1);
+        assertThat(share.get("visits").asLong()).isEqualTo(1);
     }
 
     @Test

@@ -25,6 +25,8 @@
 6. 장면: `buildScene`이 충돌 지점(`findConflict`)을 찾아 두 차가 동시에 도착하도록 시간을 맞춘다. 후방 추돌은 앞차 정지 모션
 7. 렌더: 카메라 줌인, 충돌 직전과 직후 슬로모션, 충돌 물리(임펄스, 회전, 감쇠), 불꽃, 파편, 스키드
 8. 퀴즈 통계: 첫 답에서 `quiz_start`, 완료 시 `/api/quiz/results`(문제별 답 포함), 공유 버튼 `share_click`, `?from=share` 유입 `share_visit`. 문제 id(q01~q26)는 통계 키라 바꾸지 말 것. 관리 탭 맨 위 카드
+   - 문제 하나 공유: 틀린 문제에 "이 문제 친구한테 내기" -> `q/qNN.html?f=내답`(카톡 미리보기용 정적 페이지, 열면 바로 `?q=qNN&f=`로 이동) -> 그 문제 하나만 풀고 친구 답과 비교. 정답은 링크에 넣지 않는다. 이벤트 `qshare_click`, `qshare_visit`, `qshare_answer`(events.qid). 한 문제 풀이는 퀴즈 결과 통계에 넣지 않는다
+   - 문제를 추가하거나 고치면 `python3 tools/og/gen_question_pages.py`와 `tools/og/render_og.py`를 다시 돌릴 것
 9. 투표/댓글/신고/관리자: `api()` 클라이언트로 backend 호출, 선택한 사고 상태는 5초 폴링, 목록은 30초. 관리 탭은 `?admin=1` + ADMIN_TOKEN
 
 ## 과실 수치의 근거 수준

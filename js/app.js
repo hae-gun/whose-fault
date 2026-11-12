@@ -883,7 +883,10 @@ gRange.oninput=()=>{const v=+gRange.value;$('gA').textContent=v;$('gB').textCont
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 // 익명 사용 기록. 서버 연결이 준비된 뒤에 보내고, 실패해도 게임에는 영향 없음
 function track(kind,grade,qid){const b={kind};if(grade)b.grade=grade;if(qid)b.qid=qid;(capsPromise||Promise.resolve()).then(()=>{if(apiOk)api('POST','/api/events',b).catch(()=>{});});}
-function quizStart(){quiz.single=false;quiz.order=shuffle(Q.map((_,i)=>i)).slice(0,10);quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
+function quizStart(){const ld=loadLast(),lb=$('qLast');
+  if(ld){lb.classList.remove('hidden');lb.textContent=`지난 결과 ${ld.pct}점 보기, 틀린 문제 친구한테 내기 →`;lb.onclick=()=>{showEnd(ld,true);window.scrollTo({top:0,behavior:'smooth'});};}
+  else lb.classList.add('hidden');
+  quiz.single=false;quiz.order=shuffle(Q.map((_,i)=>i)).slice(0,10);quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
 function quizShow(){if(!quiz.started)quizStart();else if(quiz.i<quiz.order.length)quizPlay();else replayFn=null;}
 function quizPlay(){const q=Q[quiz.order[quiz.i]];setHint('A 파란 차, B 빨간 차');play(buildScene(q.sp),()=>setHint(quiz.answered?'':'몇 대 몇일까요?'));replayFn=()=>play(buildScene(q.sp));}
 function quizRender(){
@@ -896,6 +899,7 @@ function quizRender(){
 }
 $('qSubmit').onclick=()=>{
   if(quiz.answered)return;quiz.answered=true;
+  $('qLast').classList.add('hidden'); // 푸는 중에는 지난 결과로 빠지지 않게
   const q=Q[quiz.order[quiz.i]],res=judge(normalize(q.sp)),g=+gRange.value,diff=Math.abs(g-res.final[0]);
   const pts=diff===0?10:diff===10?6:diff===20?3:0;
   if(quiz.single)track('qshare_answer',null,q.id);
@@ -924,17 +928,30 @@ $('qSubmit').onclick=()=>{
     quiz.i++;if(quiz.i>=quiz.order.length)quizEnd();else{quizRender();window.scrollTo({top:0,behavior:'smooth'});}};
 };
 // 문제 하나를 링크로 보낸다. 내 답(f)을 담아서 친구 화면에 비교로 보여준다. 정답은 링크에 넣지 않는다
-async function askFriend(q,g,diff){
+async function askFriend(q,g,diff,msgEl){
   track('qshare_click',null,q.id);
   const url=`${SHARE_BASE}q/${q.id}.html?f=${g}`;
   const text=diff>0?`이 사고 몇 대 몇인지 나는 틀렸어. 너는 맞힐 수 있어? "${q.t}"`:`이 사고 몇 대 몇일까? 너도 맞혀 봐. "${q.t}"`;
   try{if(navigator.share){await navigator.share({title:'몇 대 몇? 이 사고 맞혀 봐',text,url});return;}}catch(err){if(err&&err.name==='AbortError')return;}
-  const m=$('qAskMsg');
+  const m=msgEl||$('qAskMsg');
   try{await navigator.clipboard.writeText(text+'\n'+url);m.innerHTML='<div class="msg">링크를 복사했어요. 카톡에 붙여넣으면 문제 카드가 함께 보여요.</div>';}
   catch(_){m.innerHTML='<div class="msg"></div>';m.firstChild.textContent=text+' '+url;}
 }
+// 결과 화면: 틀린 문제를 하나씩 친구한테 낸다
+function wrongList(box,log){
+  const wrong=log.filter(a=>a.guess!==a.answer);
+  const w=el('div','wrongs');
+  w.append(el('div','label',wrong.length?`틀린 문제 친구한테 내기 (${wrong.length}개)`:'다 맞혔어요! 그래도 친구한테 내 보기'));
+  for(const a of (wrong.length?wrong:log)){const q=Q.find(x=>x.id===a.qid);if(!q)continue;
+    const it=el('div','aitem'),row=el('div','wrow'),info=el('div');
+    info.append(el('div','ctext',q.t),el('div','m',`내 답 A ${a.guess} : B ${100-a.guess} / 기준 A ${a.answer} : B ${100-a.answer}`));
+    const b=el('button','mini','보내기'),msg=el('div');
+    b.onclick=()=>askFriend(q,a.guess,Math.abs(a.guess-a.answer),msg);
+    row.append(info,b);it.append(row,msg);w.append(it);}
+  box.append(w);
+}
 // 친구가 보낸 문제 하나만 풀기 (?q=q07&f=70)
-function quizSingle(idx,f){quiz.single=true;quiz.friend=f;quiz.order=[idx];quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
+function quizSingle(idx,f){$('qLast').classList.add('hidden');quiz.single=true;quiz.friend=f;quiz.order=[idx];quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
 const SHARE_BASE='https://whose-fault.nobody-asked.dev/';
 const GRADES=[
   {slug:'ace',min:.9,badge:'S등급',name:'보험사 에이스 손해사정사',tag:'블랙박스 영상만 봐도 몇 대 몇이 보이는 사람'},
@@ -943,14 +960,28 @@ const GRADES=[
   {slug:'newbie',min:.3,badge:'C등급',name:'초보 운전 스티커',tag:'"내가 왜 30이야?" 하고 억울해할 타입'},
   {slug:'relicense',min:0,badge:'F등급',name:'면허 다시 따야 할 수도',tag:'일단 오늘은 대중교통을 추천해요'}];
 const grade=p=>GRADES.find(g=>p>=g.min);
+// 마지막 결과를 브라우저에 남겨서 나중에 틀린 문제를 친구한테 낼 수 있게 한다. 서버에는 따로 보낸다
+const LAST_KEY='wf_last';
+function loadLast(){try{const d=JSON.parse(store.get(LAST_KEY)||'null');
+  if(!d||typeof d.pct!=='number'||!Array.isArray(d.log)||!GRADES.some(x=>x.slug===d.grade))return null;
+  d.log=d.log.filter(a=>a&&Q.some(x=>x.id===a.qid)&&a.guess>=0&&a.guess<=100&&a.answer>=0&&a.answer<=100);return d;}catch(_){return null;}}
 function quizEnd(){
   const n=quiz.order.length,max=n*10,p=quiz.score/max,g=grade(p),pct=Math.round(p*100);
+  const log=quiz.log.slice();
+  store.set(LAST_KEY,JSON.stringify({at:Date.now(),pct,grade:g.slug,log}));
+  (capsPromise||Promise.resolve()).then(()=>{if(apiOk)api('POST','/api/quiz/results',{score:pct,grade:g.slug,answers:log}).catch(()=>{});});
+  showEnd({pct,grade:g.slug,log},false);
+}
+function showEnd(d,past){
+  const g=GRADES.find(x=>x.slug===d.grade),pct=d.pct;
+  quiz.started=true;quiz.i=quiz.order.length;replayFn=null;
   const url=`${SHARE_BASE}r/${g.slug}.html?s=${pct}`;
-  $('quizCard').classList.add('hidden');const e=$('quizEnd');e.classList.remove('hidden');
+  $('quizCard').classList.add('hidden');$('qLast').classList.add('hidden');const e=$('quizEnd');e.classList.remove('hidden');
   e.innerHTML=`<div class="final"><div style="font-size:13px;color:var(--sub);font-weight:700">내 과실 판단력</div><div class="score">${pct}<span style="font-size:22px;color:var(--sub)"> / 100</span></div><div class="gbadge">${g.badge}</div><div class="grade">${g.name}</div><p>${g.tag}</p></div><button class="btn" id="qShare">결과 공유하기</button><div class="row"><a class="btn ghost" id="qPreview" target="_blank" rel="noopener">공유 페이지 보기</a><button class="btn ghost" id="qAgain">다시 도전</button></div><div id="qShareMsg"></div>`;
   $('qPreview').href=url;
-  $('qAgain').onclick=quizStart;
-  const log=quiz.log.slice();(capsPromise||Promise.resolve()).then(()=>{if(apiOk)api('POST','/api/quiz/results',{score:pct,grade:g.slug,answers:log}).catch(()=>{});});
+  $('qAgain').onclick=()=>{quizStart();window.scrollTo({top:0,behavior:'smooth'});};
+  if(past)e.firstChild.firstChild.textContent=`지난번 내 과실 판단력 (${new Date(d.at||Date.now()).toLocaleDateString('ko-KR')})`;
+  wrongList(e,d.log);
   $('qShare').onclick=async()=>{
     track('share_click',g.slug);
     const text=`몇 대 몇? 과실비율 퀴즈 ${pct}점, 내 등급은 "${g.name}" (${g.badge})! 당신의 과실 판단력은?`;

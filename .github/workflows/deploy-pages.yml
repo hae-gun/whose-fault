@@ -4,7 +4,7 @@ run-name: ${{ github.event_name == 'workflow_dispatch' && '수동 배포' || git
 
 on:
   push:
-    branches: [main]
+    branches: [develop]
   workflow_dispatch:
 
 permissions:

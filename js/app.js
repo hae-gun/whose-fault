@@ -966,21 +966,28 @@ const SOLVED_KEY='wf_solved';
 function loadSolved(){try{const o=JSON.parse(store.get(SOLVED_KEY)||'{}');return o&&typeof o==='object'?o:{};}catch(_){return {};}}
 function markSolved(qid,g){const o=loadSolved();o[qid]=g;store.set(SOLVED_KEY,JSON.stringify(o));}
 // 전체 문제 목록: 10문제를 다시 풀지 않아도 아무 문제나 골라 풀고 친구한테 낼 수 있다. 정답은 목록에 보이지 않는다
-function showBank(){
+function showBank(deep){
+  if(deep===undefined)deep=!!quiz.deep;
+  quiz.deep=deep;paintMode();
   quiz.started=true;quiz.single=false;quiz.bank=false;quiz.order=[];quiz.i=0;replayFn=null;
-  const last=loadLast(),solved=loadSolved();
+  const last=loadLast(),solved=loadSolved(),pool=deep?QD:Q;
   if(last)for(const a of last.log)if(!(a.qid in solved))solved[a.qid]=a.guess;
   $('quizCard').classList.add('hidden');$('qLast').classList.add('hidden');$('qAll').classList.add('hidden');
   const e=$('quizEnd');e.classList.remove('hidden');e.innerHTML='';
-  const n=Q.filter(q=>q.id in solved).length;
-  e.append(el('div','label',`전체 문제 ${Q.length}개 (푼 문제 ${n}개)`));
-  Q.forEach((q,idx)=>{const it=el('div','aitem'),row=el('div','wrow'),info=el('div');
+  // 기본과 심화 목록 전환
+  const seg=el('div','seg qmode');
+  for(const [d,t] of [[false,`기본 ${Q.length}문제`],[true,`심화 ${QD.length}문제`]]){
+    const b=el('button',d===deep?'on':'',t);b.onclick=()=>{if(d!==deep)showBank(d);};seg.append(b);}
+  e.append(seg);
+  const n=pool.filter(q=>q.id in solved).length;
+  e.append(el('div','label',`${deep?'심화':'기본'} 문제 ${pool.length}개 (푼 문제 ${n}개)`));
+  pool.forEach((q,idx)=>{const it=el('div','aitem'),row=el('div','wrow'),info=el('div');
     const done=q.id in solved;
     info.append(el('div','ctext',`${q.id.slice(1)}. ${q.t}`),el('div','m',done?`풀었어요, 내 답 A ${solved[q.id]} : B ${100-solved[q.id]}`:'아직 안 푼 문제'));
     const b=el('button','mini',done?'다시 풀기':'풀기');
-    b.onclick=()=>{quizSingle(idx,null,true);window.scrollTo({top:0,behavior:'smooth'});};
+    b.onclick=()=>{quizSingle(idx,null,true,pool);window.scrollTo({top:0,behavior:'smooth'});};
     row.append(info,b);it.append(row);e.append(it);});
-  const again=el('button','btn','랜덤 10문제 풀기');again.onclick=()=>{quizStart();window.scrollTo({top:0,behavior:'smooth'});};
+  const again=el('button','btn',deep?'심화 랜덤 10문제 풀기':'랜덤 10문제 풀기');again.onclick=()=>{quizStart();window.scrollTo({top:0,behavior:'smooth'});};
   e.append(again);setHint('');
 }
 // 결과 화면: 틀린 문제를 하나씩 친구한테 낸다

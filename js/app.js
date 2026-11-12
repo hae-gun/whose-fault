@@ -1235,7 +1235,8 @@ async function loadCases(){
   try{
     const list=await api('GET','/api/cases?limit=60');
     cases=(list||[]).map(x=>{const sp=sanitizeSpec(x.spec);if(!sp)return null;const N=normalize(sp);if(N.err)return null;
-      return{id:String(x.id),title:String(x.title||'').slice(0,40)||describe(N),desc:String(x.desc||'').slice(0,120),spec:sp,N,createdAt:+x.createdAt||0,reports:+x.reports||0,hidden:!!x.hidden};}).filter(Boolean);
+      return{id:String(x.id),title:String(x.title||'').slice(0,40)||describe(N),desc:String(x.desc||'').slice(0,120),spec:sp,N,createdAt:+x.createdAt||0,reports:+x.reports||0,hidden:!!x.hidden,
+        votes:Math.max(0,+x.votes||0),comments:Math.max(0,+x.comments||0),heat:Math.max(0,+x.heat||0),activeNow:Math.max(0,+x.activeNow||0),hot:!!x.hot};}).filter(Boolean);
     $('caseStatus').classList.toggle('hidden',cases.length>0);
     if(!cases.length)$('caseStatus').textContent='아직 올라온 사고가 없어요. 직접 그리기 탭에서 첫 사고를 올려보세요!';
     renderCaseList();
@@ -1250,10 +1251,38 @@ function startPolling(){
   listTimer=setInterval(()=>{if(!document.hidden&&(mode==='vote'||mode==='admin'))loadCases();},LIST_MS);
 }
 function stopPolling(){if(pollTimer)clearInterval(pollTimer);if(listTimer)clearInterval(listTimer);pollTimer=listTimer=null;}
+function hotPill(){const h=el('span','hot','HOT');h.title='최근 24시간 투표와 댓글이 많은 사고';return h;}
+function caseMeta(c){const p=[];if(c.votes)p.push(`투표 ${c.votes}`);if(c.comments)p.push(`댓글 ${c.comments}`);return p.join(' / ');}
+// 지금 뜨거운 논쟁 TOP 3: 최근 24시간 열기(heat) 순, 모자라면 전체 참여 순으로 채운다. 숫자만 보여주고 의견 쏠림은 투표 전에 보이지 않게
+function renderHotTop(){
+  const box=$('hotTop');box.innerHTML='';
+  const live=cases.filter(c=>!c.hidden);
+  const byHeat=live.filter(c=>c.heat>0).sort((a,b)=>b.heat-a.heat||b.comments-a.comments);
+  const rest=live.filter(c=>!c.heat&&(c.votes||c.comments)).sort((a,b)=>(b.votes+3*b.comments)-(a.votes+3*a.comments));
+  const top=byHeat.concat(rest).slice(0,3);
+  box.classList.toggle('hidden',!top.length);if(!top.length)return;
+  // 아무 사고도 안 골랐으면 맨 위에, 골랐으면 상세 아래에
+  const vd=$('voteDetail');if(sel){if(vd.nextElementSibling!==box)vd.after(box);}else if(vd.previousElementSibling!==box)vd.before(box);
+  const hd=el('div','hothead'),fire=el('span','fire');
+  fire.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20"><defs><linearGradient id="fg" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff3d3d"/><stop offset=".6" stop-color="#ff8a00"/><stop offset="1" stop-color="#ffcf3d"/></linearGradient></defs><path fill="url(#fg)" d="M12 2c1 3.2-1.2 4.8-2.6 6.6C8 10.4 7 12 7 14.2 7 17.4 9.3 20 12 20s5-2.6 5-5.8c0-2-1-3.6-2-4.6.1 1.6-.6 2.8-1.6 3.2.3-3.8-.4-7.6-1.4-10.8z"/><path fill="#ffe08a" d="M12 20c-1.6 0-2.8-1.3-2.8-3 0-1.6 1.1-2.5 1.8-3.6.3 1 .9 1.6 1.6 1.8.2-1 .6-1.9 1.2-2.6.6 1.1 1 2.5 1 3.6 0 2.2-1.2 3.8-2.8 3.8z"/></svg>';
+  hd.append(fire,el('b',null,'지금 뜨거운 논쟁 TOP 3'));
+  box.append(hd);
+  top.forEach((c,i)=>{const b=el('button','hotitem'+(sel&&sel.id===c.id?' on':''));
+    const info=el('div','hi');const t=el('div','t');if(c.hot)t.append(hotPill());t.append(document.createTextNode(c.title));
+    const m=el('div','m',caseMeta(c));
+    if(c.activeNow>=2){const n=el('span','now',`지금 ${c.activeNow}명 참여 중`);n.title='최근 1시간 동안 투표하거나 댓글을 쓴 사람';m.append(n);}
+    info.append(t,m);b.append(el('div','rank',String(i+1)),info,el('div','go','→'));
+    b.onclick=()=>{selectCase(c.id);window.scrollTo({top:0,behavior:'smooth'});};box.append(b);});
+}
 function renderCaseList(){
+  renderHotTop();
   const box=$('caseList');box.innerHTML='';
-  for(const c of cases){const b=el('button','case'+(sel&&sel.id===c.id?' on':''));
-    const l=el('div');l.style.minWidth='0';l.append(el('div','t',c.title),el('div','m',MAPS[c.spec.map].name+(c.hidden?' / 신고로 가려짐':'')));
+  for(const c of cases){const b=el('button','case'+(sel&&sel.id===c.id?' on':'')+(c.hot?' is-hot':''));
+    const l=el('div');l.style.minWidth='0';
+    const t=el('div','t');if(c.hot)t.append(hotPill());t.append(document.createTextNode(c.title));
+    const meta=[MAPS[c.spec.map].name,caseMeta(c)].filter(Boolean).join(' / ')+(c.hidden?' / 신고로 가려짐':'');
+    const m=el('div','m',meta);if(c.activeNow>=2)m.append(el('span','now',`지금 ${c.activeNow}명`));
+    l.append(t,m);
     b.append(l,el('div','m',c.createdAt?timeAgo(c.createdAt):''));b.onclick=()=>{selectCase(c.id);window.scrollTo({top:0,behavior:'smooth'});};box.appendChild(b);}
 }
 function timeAgo(t){const s=(Date.now()-t)/1000;if(s<60)return'방금';if(s<3600)return Math.floor(s/60)+'분 전';if(s<86400)return Math.floor(s/3600)+'시간 전';return Math.floor(s/86400)+'일 전';}

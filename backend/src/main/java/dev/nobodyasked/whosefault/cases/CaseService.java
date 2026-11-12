@@ -11,6 +11,7 @@ import dev.nobodyasked.whosefault.common.RateLimiter;
 import dev.nobodyasked.whosefault.common.TextFilter;
 import dev.nobodyasked.whosefault.config.AppProperties;
 import java.util.List;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,11 +46,32 @@ public class CaseService {
         return id;
     }
 
+    /** 최근 24시간 투표 + 댓글 x3이 이 값 이상이면 HOT */
+    static final int HOT_MIN = 10;
+    static final long DAY = 86_400_000L, HOUR = 3_600_000L;
+    /** 목록은 30초마다 모두가 부르므로 집계는 10초 동안 재사용한다 */
+    private volatile Map<String, CaseRepository.Activity> activityCache = Map.of();
+    private volatile long activityAt = 0;
+
+    private Map<String, CaseRepository.Activity> activity() {
+        long now = System.currentTimeMillis();
+        if (now - activityAt > 10_000) {
+            activityCache = cases.activity(now - DAY, now - HOUR);
+            activityAt = now;
+        }
+        return activityCache;
+    }
+
     public List<CaseItem> list(int limit, boolean admin) {
         int n = Math.max(1, Math.min(limit, 100));
+        Map<String, CaseRepository.Activity> act = activity();
         return cases.recent(n).stream()
-                .map(r -> new CaseItem(r.id(), r.title(), r.descr(), parse(r.spec()), r.createdAt(), admin ? r.reports() : 0,
-                        r.reports() >= props.hideAtReports()))
+                .map(r -> {
+                    CaseRepository.Activity a = act.getOrDefault(r.id(), CaseRepository.Activity.NONE);
+                    int heat = a.recentVotes() + 3 * a.recentComments();
+                    return new CaseItem(r.id(), r.title(), r.descr(), parse(r.spec()), r.createdAt(), admin ? r.reports() : 0,
+                            r.reports() >= props.hideAtReports(), a.votes(), a.comments(), heat, a.active(), heat >= HOT_MIN);
+                })
                 .filter(c -> admin || !c.hidden())
                 .toList();
     }

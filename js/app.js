@@ -1006,6 +1006,19 @@ const GRADES=[
   {slug:'newbie',min:.3,badge:'C등급',name:'초보 운전 스티커',tag:'"내가 왜 30이야?" 하고 억울해할 타입'},
   {slug:'relicense',min:0,badge:'F등급',name:'면허 다시 따야 할 수도',tag:'일단 오늘은 대중교통을 추천해요'}];
 const grade=p=>GRADES.find(g=>p>=g.min);
+// 댓글 옆 등급 뱃지. 서버가 글쓴이 퀴즈 최고점으로 정한 등급(slug)을 그린다. 누르면 퀴즈로
+const BADGE={ace:['S','에이스'],veteran:['A','베테랑'],otaku:['B','덕후'],newbie:['C','초보'],relicense:['F','재시험']};
+function gradeBadge(slug,mine){
+  const b=BADGE[slug];if(!b)return null;const g=GRADES.find(x=>x.slug===slug);
+  const e=el('button','gb gb-'+slug);e.type='button';
+  e.title=`과실 판단력 퀴즈 ${g.badge} "${g.name}" (최고점 기준)`;
+  e.append(el('b',null,b[0]),el('span',null,b[1]));
+  e.onclick=()=>{setMode('quiz');window.scrollTo({top:0,behavior:'smooth'});
+    flash(mine?'다시 풀어서 등급을 올려 보세요':'퀴즈를 풀면 내 댓글에도 등급 뱃지가 붙어요');};
+  return e;
+}
+const BEST_KEY='wf_best';
+function myBest(){const v=parseInt(store.get(BEST_KEY),10);return v>=0&&v<=100?v:null;}
 // 마지막 결과를 브라우저에 남겨서 나중에 틀린 문제를 친구한테 낼 수 있게 한다. 서버에는 따로 보낸다
 const LAST_KEY='wf_last';
 function loadLast(){try{const d=JSON.parse(store.get(LAST_KEY)||'null');
@@ -1017,6 +1030,7 @@ function quizEnd(){
   const deep=quiz.deep;
   store.set(LAST_KEY,JSON.stringify({at:Date.now(),pct,grade:g.slug,log,deep}));
   // 심화 점수는 서버 최고 점수와 통계에 섞지 않는다
+  if(!deep){const b=myBest();if(b==null||pct>b)store.set(BEST_KEY,String(pct));}
   if(!deep)(capsPromise||Promise.resolve()).then(()=>{if(apiOk)api('POST','/api/quiz/results',{score:pct,grade:g.slug,answers:log}).catch(()=>{});});
   showEnd({pct,grade:g.slug,log,deep},false);
 }
@@ -1328,7 +1342,11 @@ function commentsEl(mine){
   head.append(sorts);wrap.append(head);
   if(mine){
     const mc=choiceOf(mine),form=el('div','cform');
-    form.append(el('span','side '+sideCls(mc),`${mc.t} 파`));
+    const fh=el('div','ctop');fh.append(el('span','side '+sideCls(mc),`${mc.t} 파`));
+    const mb=myBest();
+    if(mb!=null)fh.append(gradeBadge(grade(mb/100).slug,true));
+    else{const go=el('button','gb gb-none');go.type='button';go.append(el('span',null,'퀴즈 풀고 등급 뱃지 받기 →'));go.onclick=()=>{setMode('quiz');window.scrollTo({top:0,behavior:'smooth'});};fh.append(go);}
+    form.append(fh);
     const ta=el('textarea');ta.maxLength=300;ta.placeholder='왜 그렇게 생각하세요? (차량 번호, 실명, 욕설은 올릴 수 없어요)';form.append(ta);
     const btn=el('button','btn','댓글 올리기'),msg=el('div');
     btn.onclick=async()=>{const t=ta.value.trim();if(!t)return;const bad=checkText(t);if(bad){msg.innerHTML='';msg.append(el('div','msg warn',bad));return;}
@@ -1354,7 +1372,7 @@ function commentEl(c,isBest){
   if(isBest)top.append(el('span','bestTag','베스트'));
   const ch=choiceOf(c);top.append(el('span','side '+sideCls(ch),`${ch.t} 파`));
   top.append(el('span','cname',String(c.nick||'운전자')));
-  if(c.veteran)top.append(el('span','vet','베테랑'));
+  const gbd=gradeBadge(c.grade||(c.veteran?'veteran':null),c.mine);if(gbd)top.append(gbd);
   top.append(el('span','m',timeAgo(+c.at||0)));
   item.append(top,el('div','ctext',String(c.text||'').slice(0,300)));
   if(isOwner&&c.reports)item.append(el('div','m',`신고 ${c.reports}건`));

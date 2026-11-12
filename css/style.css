@@ -133,7 +133,6 @@ details.stddet summary{cursor:pointer;font-size:13px;font-weight:700}
 .ctop{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .cname{font-size:12px;font-weight:700}
 .bestTag{font-size:10px;font-weight:900;color:#fff;background:#f59e0b;border-radius:6px;padding:2px 6px}
-.vet{font-size:10px;font-weight:900;color:#0f766e;background:#ccfbf1;border-radius:6px;padding:2px 6px}
 .ctext{font-size:14px;line-height:1.6;margin-top:5px;white-space:pre-wrap;word-break:break-word}
 .cact{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .mini{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;font:500 11px 'Noto Sans KR';color:#3d4148;cursor:pointer}
@@ -155,3 +154,17 @@ details.stddet summary{cursor:pointer;font-size:13px;font-weight:700}
 .qmode{margin-bottom:12px}
 .btn.deep{background:#ff4a4f;margin-top:10px}
 .deephint{font-size:12px;color:var(--sub);text-align:center;margin:6px 0 0}
+
+/* 등급 뱃지: 색 원 안에 등급 글자 + 짧은 이름 */
+.gb{--c:#6b7079;display:inline-flex;align-items:center;gap:4px;border:0;cursor:pointer;padding:2px 8px 2px 2px;border-radius:999px;
+  font:800 11px 'Noto Sans KR',sans-serif;line-height:1;color:var(--c);background:color-mix(in srgb,var(--c) 13%,#fff);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 28%,#fff)}
+.gb b{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:50%;background:var(--c);color:#fff;font-size:10px;font-weight:900}
+.gb:active{transform:scale(.96)}
+.gb-ace{--c:#7c3aed;background:linear-gradient(100deg,#f3e8ff,#fde7f3 60%,#f3e8ff);background-size:200% 100%;animation:gbShine 3.2s ease-in-out infinite}
+.gb-ace b{background:linear-gradient(135deg,#a855f7,#7c3aed 55%,#db2777);box-shadow:0 0 0 2px #fff,0 0 8px rgba(168,85,247,.55)}
+.gb-veteran{--c:#2f6bff}.gb-otaku{--c:#0f9f6e}.gb-newbie{--c:#d97706}.gb-relicense{--c:#ff4a4f}
+.gb-relicense b{transform:rotate(-12deg)}
+.gb-none{--c:#6b7079;padding:4px 10px;font-weight:700}
+@keyframes gbShine{0%,100%{background-position:0 0}50%{background-position:100% 0}}
+@media (prefers-reduced-motion:reduce){.gb-ace{animation:none}}
+.cform>.ctop{margin-bottom:6px}

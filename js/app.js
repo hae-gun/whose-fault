@@ -877,22 +877,43 @@ const Q=[
 {id:'q25',t:'정차한 앞차를 꽝',s:'B가 앞에서 서행하다 멈췄는데 뒤따르던 A가 그대로 들이받았어요.',sp:{map:'road2',A:{lane:1,to:1,speed:60},B:{lane:1,to:1,speed:40},rear:'A'}},
 {id:'q26',t:'이유 없이 급정거한 앞차',s:'B가 아무 이유 없이 갑자기 급브레이크를 밟았고, 뒤따르던 A가 추돌했어요.',sp:{map:'road2',A:{lane:2,to:2},B:{lane:2,to:2},rear:'A',mods:{B:['suddenStop']}}}
 ];
-const quiz={order:[],i:0,score:0,answered:false,started:false};
+/* 심화: 기본과실에 수정요소가 두세 개 겹치는 문제 */
+const QD=[
+{id:'d01',t:'신호는 지켰는데 술을 마셨다',s:'A는 녹색불에 직진했고 옆길 B는 빨간불에 들어왔어요. 그런데 A가 음주운전 중이었어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'G'},B:{arm:'W',man:'straight',light:'R'},mods:{A:['drunk']}}},
+{id:'d02',t:'과속하면서 폰까지 본 직진차',s:'녹색불에 B가 비보호 좌회전했어요. 마주 오던 A는 제한 50km/h 도로를 75km/h로 달리면서 휴대폰을 보고 있었어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'G',speed:75},B:{arm:'N',man:'left',light:'G',speed:30},mods:{A:['careless']}}},
+{id:'d03',t:'칼치기 vs 100km/h 뒤차',s:'제한 60km/h 도로. B가 깜빡이 없이 A 앞으로 끼어들었는데, A는 100km/h로 달리고 있었어요.',sp:{map:'road2',A:{lane:2,to:2,speed:100},B:{lane:1,to:2,speed:60},rear:'A',mods:{B:['noBlink']}}},
+{id:'d04',t:'급정거한 앞차, 술 마신 뒤차',s:'B가 아무 이유 없이 급브레이크를 밟았어요. 뒤따르던 A는 음주 상태로 그대로 추돌했어요.',sp:{map:'road2',A:{lane:2,to:2},B:{lane:2,to:2},rear:'A',mods:{A:['drunk'],B:['suddenStop']}}},
+{id:'d05',t:'먼저 들어갔고, 쟤는 폰 봤는데',s:'신호 없는 같은 폭 교차로. A가 확실히 먼저 들어갔고, 오른쪽 길의 B는 휴대폰을 보고 있었어요.',sp:{map:'nosig_eq',A:{arm:'S',man:'straight',speed:40},B:{arm:'E',man:'straight',speed:40},mods:{A:['first'],B:['careless']}}},
+{id:'d06',t:'삼거리, 그런데 직진차가 95km/h',s:'B가 옆길에서 좌회전해 큰길로 나왔어요. 큰길을 직진하던 A는 제한 50km/h 도로를 95km/h로 달리고 있었어요.',sp:{map:'tee',A:{arm:'W',man:'straight',speed:95},B:{arm:'S',man:'left',speed:25}}},
+{id:'d07',t:'회전 중인데 폰을 봤다',s:'A는 회전교차로를 돌던 중이었지만 휴대폰을 보고 있었어요. B는 양보 없이 회전교차로에 들어왔어요.',sp:{map:'round',A:{role:'ring',from:'N',to:'E',speed:30},B:{role:'enter',from:'S',to:'W',speed:30},mods:{A:['careless']}}},
+{id:'d08',t:'주차장을 40km/h로 달린 차',s:'B가 주차칸에서 빠져나오고 있었어요. 통로의 A는 제한 10km/h 주차장을 40km/h로 달리며 휴대폰을 보고 있었어요.',sp:{map:'park',A:{role:'aisle',speed:40},B:{role:'exit',speed:8},mods:{A:['careless']}}},
+{id:'d09',t:'둘 다 빨간불, 한 명은 음주',s:'A와 B 모두 빨간불을 무시하고 교차로에 들어왔어요. B는 음주 상태였어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'R'},B:{arm:'W',man:'straight',light:'R'},mods:{B:['drunk']}}},
+{id:'d10',t:'중앙선 넘은 차 vs 90km/h',s:'B가 추월하려고 중앙선을 넘었어요. 마주 오던 A는 제한 50km/h 도로를 90km/h로 달리고 있었어요.',sp:{map:'two',A:{dir:'down',speed:90},B:{dir:'up',invade:true,zone:760,speed:65}}},
+{id:'d11',t:'동시에 차로 변경, 한쪽은 깜빡이 없음',s:'나란히 달리던 A와 B가 같은 순간 서로의 차로로 들어갔어요. A만 깜빡이를 켜지 않았어요.',sp:{map:'road2',A:{lane:1,to:2},B:{lane:2,to:1},rear:'A',mods:{A:['noBlink']}}},
+{id:'d12',t:'적색 점멸 좌회전 vs 과속 황색 점멸',s:'적색 점멸 쪽 A가 좌회전했어요. 황색 점멸 쪽 B는 제한 50km/h 도로를 90km/h로 직진했어요.',sp:{map:'flash',A:{arm:'S',man:'left',light:'RF',speed:25},B:{arm:'E',man:'straight',light:'YF',speed:90}}},
+{id:'d13',t:'골목길 차 vs 술 마신 대로 차',s:'신호 없는 대로와 소로. B가 소로에서 나와 대로를 가로질렀고, 대로를 달리던 A는 음주 상태였어요.',sp:{map:'nosig_main',A:{arm:'W',man:'straight'},B:{arm:'S',man:'straight',speed:30},mods:{A:['drunk']}}},
+{id:'d14',t:'노란불 꼬리물기 vs 폰 보며 출발',s:'A가 노란불에 들어갔다가 교차로에 갇혔어요. 옆길 B는 녹색불이 되자 휴대폰을 보면서 바로 출발했어요.',sp:{map:'sig',A:{arm:'S',man:'straight',light:'Y',speed:30},B:{arm:'W',man:'straight',light:'G',speed:30},mods:{B:['careless']}}}
+];
+const QALL=Q.concat(QD);
+const quiz={order:[],i:0,score:0,answered:false,started:false,deep:false,pool:Q};
+const curQ=()=>quiz.pool[quiz.order[quiz.i]];
+function paintMode(){document.querySelectorAll('#qMode button').forEach(b=>b.classList.toggle('on',(b.dataset.q==='deep')===quiz.deep));}
+function setQuizMode(deep){quiz.deep=deep;paintMode();quizStart();}
 const gRange=$('gRange');
 gRange.oninput=()=>{const v=+gRange.value;$('gA').textContent=v;$('gB').textContent=100-v;gRange.style.setProperty('--p',v+'%');};
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 // 익명 사용 기록. 서버 연결이 준비된 뒤에 보내고, 실패해도 게임에는 영향 없음
 function track(kind,grade,qid){const b={kind};if(grade)b.grade=grade;if(qid)b.qid=qid;(capsPromise||Promise.resolve()).then(()=>{if(apiOk)api('POST','/api/events',b).catch(()=>{});});}
 function quizStart(){const ld=loadLast(),lb=$('qLast');
-  if(ld){lb.classList.remove('hidden');lb.textContent=`지난 결과 ${ld.pct}점 보기, 틀린 문제 친구한테 내기 →`;lb.onclick=()=>{showEnd(ld,true);window.scrollTo({top:0,behavior:'smooth'});};}
+  if(ld){lb.classList.remove('hidden');lb.textContent=`지난 ${ld.deep?"심화 ":""}결과 ${ld.pct}점 보기, 틀린 문제 친구한테 내기 →`;lb.onclick=()=>{showEnd(ld,true);window.scrollTo({top:0,behavior:'smooth'});};}
   else lb.classList.add('hidden');
   $('qAll').classList.remove('hidden');quiz.bank=false;
-  quiz.single=false;quiz.order=shuffle(Q.map((_,i)=>i)).slice(0,10);quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
+  quiz.single=false;quiz.pool=quiz.deep?QD:Q;quiz.order=shuffle(quiz.pool.map((_,i)=>i)).slice(0,10);quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
 function quizShow(){if(!quiz.started)quizStart();else if(quiz.i<quiz.order.length)quizPlay();else replayFn=null;}
-function quizPlay(){const q=Q[quiz.order[quiz.i]];setHint('A 파란 차, B 빨간 차');play(buildScene(q.sp),()=>setHint(quiz.answered?'':'몇 대 몇일까요?'));replayFn=()=>play(buildScene(q.sp));}
+function quizPlay(){const q=curQ();setHint('A 파란 차, B 빨간 차');play(buildScene(q.sp),()=>setHint(quiz.answered?'':'몇 대 몇일까요?'));replayFn=()=>play(buildScene(q.sp));}
 function quizRender(){
-  const q=Q[quiz.order[quiz.i]],n=quiz.order.length;quiz.answered=false;
-  $('qNum').textContent=quiz.single?(quiz.bank?'전체 문제에서 고른 문제':'친구가 보낸 문제'):`문제 ${quiz.i+1} / ${n}`;$('qScore').textContent=quiz.single?'':`${quiz.score}점`;$('qProg').style.width=quiz.single?'0':(quiz.i/n*100)+'%';
+  const q=curQ(),n=quiz.order.length;quiz.answered=false;
+  $('qNum').textContent=quiz.single?(quiz.bank?'전체 문제에서 고른 문제':'친구가 보낸 문제'):`${quiz.deep?'심화 ':''}문제 ${quiz.i+1} / ${n}`;$('qScore').textContent=quiz.single?'':`${quiz.score}점`;$('qProg').style.width=quiz.single?'0':(quiz.i/n*100)+'%';
   $('qTitle').textContent=q.t;$('qStory').textContent=q.s;renderChips($('qChips'),normalize(q.sp));
   setRange(gRange,50);gRange.oninput();gRange.disabled=false;
   $('qSubmit').classList.remove('hidden');$('qReveal').innerHTML='';
@@ -901,7 +922,7 @@ function quizRender(){
 $('qSubmit').onclick=()=>{
   if(quiz.answered)return;quiz.answered=true;
   $('qLast').classList.add('hidden');if(!quiz.single)$('qAll').classList.add('hidden'); // 푸는 중에는 지난 결과로 빠지지 않게
-  const q=Q[quiz.order[quiz.i]],res=judge(normalize(q.sp)),g=+gRange.value,diff=Math.abs(g-res.final[0]);
+  const q=curQ(),res=judge(normalize(q.sp)),g=+gRange.value,diff=Math.abs(g-res.final[0]);
   const pts=diff===0?10:diff===10?6:diff===20?3:0;
   markSolved(q.id,g);
   if(quiz.single){if(!quiz.bank)track('qshare_answer',null,q.id);}
@@ -933,7 +954,7 @@ $('qSubmit').onclick=()=>{
 // 문제 하나를 링크로 보낸다. 내 답(f)을 담아서 친구 화면에 비교로 보여준다. 정답은 링크에 넣지 않는다
 async function askFriend(q,g,diff,msgEl){
   track('qshare_click',null,q.id);
-  const url=`${SHARE_BASE}q/${q.id}.html?f=${g}`;
+  const url=q.id[0]==='d'?`${SHARE_BASE}?q=${q.id}&f=${g}`:`${SHARE_BASE}q/${q.id}.html?f=${g}`; // 심화 문제는 미리보기 페이지가 없어서 앱 주소로 바로
   const text=diff>0?`이 사고 몇 대 몇인지 나는 틀렸어. 너는 맞힐 수 있어? "${q.t}"`:`이 사고 몇 대 몇일까? 너도 맞혀 봐. "${q.t}"`;
   try{if(navigator.share){await navigator.share({title:'몇 대 몇? 이 사고 맞혀 봐',text,url});return;}}catch(err){if(err&&err.name==='AbortError')return;}
   const m=msgEl||$('qAskMsg');
@@ -967,7 +988,7 @@ function wrongList(box,log){
   const wrong=log.filter(a=>a.guess!==a.answer);
   const w=el('div','wrongs');
   w.append(el('div','label',wrong.length?`틀린 문제 친구한테 내기 (${wrong.length}개)`:'다 맞혔어요! 그래도 친구한테 내 보기'));
-  for(const a of (wrong.length?wrong:log)){const q=Q.find(x=>x.id===a.qid);if(!q)continue;
+  for(const a of (wrong.length?wrong:log)){const q=QALL.find(x=>x.id===a.qid);if(!q)continue;
     const it=el('div','aitem'),row=el('div','wrow'),info=el('div');
     info.append(el('div','ctext',q.t),el('div','m',`내 답 A ${a.guess} : B ${100-a.guess} / 기준 A ${a.answer} : B ${100-a.answer}`));
     const b=el('button','mini','보내기'),msg=el('div');
@@ -976,7 +997,7 @@ function wrongList(box,log){
   box.append(w);
 }
 // 친구가 보낸 문제 하나만 풀기 (?q=q07&f=70)
-function quizSingle(idx,f,bank){$('qLast').classList.add('hidden');$('qAll').classList.add('hidden');quiz.bank=!!bank;quiz.single=true;quiz.friend=f;quiz.order=[idx];quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
+function quizSingle(idx,f,bank,pool){quiz.pool=pool||Q;quiz.deep=quiz.pool===QD;paintMode();$('qLast').classList.add('hidden');$('qAll').classList.add('hidden');quiz.bank=!!bank;quiz.single=true;quiz.friend=f;quiz.order=[idx];quiz.i=0;quiz.score=0;quiz.started=true;quiz.log=[];$('quizEnd').classList.add('hidden');$('quizCard').classList.remove('hidden');quizRender();}
 const SHARE_BASE='https://whose-fault.nobody-asked.dev/';
 const GRADES=[
   {slug:'ace',min:.9,badge:'S등급',name:'보험사 에이스 손해사정사',tag:'블랙박스 영상만 봐도 몇 대 몇이 보이는 사람'},
@@ -989,27 +1010,30 @@ const grade=p=>GRADES.find(g=>p>=g.min);
 const LAST_KEY='wf_last';
 function loadLast(){try{const d=JSON.parse(store.get(LAST_KEY)||'null');
   if(!d||typeof d.pct!=='number'||!Array.isArray(d.log)||!GRADES.some(x=>x.slug===d.grade))return null;
-  d.log=d.log.filter(a=>a&&Q.some(x=>x.id===a.qid)&&a.guess>=0&&a.guess<=100&&a.answer>=0&&a.answer<=100);return d;}catch(_){return null;}}
+  d.log=d.log.filter(a=>a&&QALL.some(x=>x.id===a.qid)&&a.guess>=0&&a.guess<=100&&a.answer>=0&&a.answer<=100);return d;}catch(_){return null;}}
 function quizEnd(){
   const n=quiz.order.length,max=n*10,p=quiz.score/max,g=grade(p),pct=Math.round(p*100);
   const log=quiz.log.slice();
-  store.set(LAST_KEY,JSON.stringify({at:Date.now(),pct,grade:g.slug,log}));
-  (capsPromise||Promise.resolve()).then(()=>{if(apiOk)api('POST','/api/quiz/results',{score:pct,grade:g.slug,answers:log}).catch(()=>{});});
-  showEnd({pct,grade:g.slug,log},false);
+  const deep=quiz.deep;
+  store.set(LAST_KEY,JSON.stringify({at:Date.now(),pct,grade:g.slug,log,deep}));
+  // 심화 점수는 서버 최고 점수와 통계에 섞지 않는다
+  if(!deep)(capsPromise||Promise.resolve()).then(()=>{if(apiOk)api('POST','/api/quiz/results',{score:pct,grade:g.slug,answers:log}).catch(()=>{});});
+  showEnd({pct,grade:g.slug,log,deep},false);
 }
 function showEnd(d,past){
   const g=GRADES.find(x=>x.slug===d.grade),pct=d.pct;
   quiz.started=true;quiz.i=quiz.order.length;replayFn=null;
   const url=`${SHARE_BASE}r/${g.slug}.html?s=${pct}`;
   $('quizCard').classList.add('hidden');$('qLast').classList.add('hidden');$('qAll').classList.remove('hidden');const e=$('quizEnd');e.classList.remove('hidden');
-  e.innerHTML=`<div class="final"><div style="font-size:13px;color:var(--sub);font-weight:700">내 과실 판단력</div><div class="score">${pct}<span style="font-size:22px;color:var(--sub)"> / 100</span></div><div class="gbadge">${g.badge}</div><div class="grade">${g.name}</div><p>${g.tag}</p></div><button class="btn" id="qShare">결과 공유하기</button><div class="row"><a class="btn ghost" id="qPreview" target="_blank" rel="noopener">공유 페이지 보기</a><button class="btn ghost" id="qAgain">다시 도전</button></div><div id="qShareMsg"></div>`;
+  e.innerHTML=`<div class="final"><div style="font-size:13px;color:var(--sub);font-weight:700">내 과실 판단력</div><div class="score">${pct}<span style="font-size:22px;color:var(--sub)"> / 100</span></div><div class="gbadge">${d.deep?'심화 ':''}${g.badge}</div><div class="grade">${g.name}</div><p>${g.tag}</p></div><button class="btn" id="qShare">결과 공유하기</button><div class="row"><a class="btn ghost" id="qPreview" target="_blank" rel="noopener">공유 페이지 보기</a><button class="btn ghost" id="qAgain">다시 도전</button></div>${d.deep?'':'<button class="btn deep" id="qDeep">심화 모드 도전하기</button><p class="deephint">수정요소가 두세 개씩 겹치는 문제예요. 과속에 휴대폰에 음주까지.</p>'}<div id="qShareMsg"></div>`;
+  if(!d.deep)$('qDeep').onclick=()=>{setQuizMode(true);window.scrollTo({top:0,behavior:'smooth'});};
   $('qPreview').href=url;
-  $('qAgain').onclick=()=>{quizStart();window.scrollTo({top:0,behavior:'smooth'});};
+  $('qAgain').onclick=()=>{quiz.deep=!!d.deep;paintMode();quizStart();window.scrollTo({top:0,behavior:'smooth'});};
   if(past)e.firstChild.firstChild.textContent=`지난번 내 과실 판단력 (${new Date(d.at||Date.now()).toLocaleDateString('ko-KR')})`;
   wrongList(e,d.log);
   $('qShare').onclick=async()=>{
     track('share_click',g.slug);
-    const text=`몇 대 몇? 과실비율 퀴즈 ${pct}점, 내 등급은 "${g.name}" (${g.badge})! 당신의 과실 판단력은?`;
+    const text=`몇 대 몇? 과실비율 퀴즈${d.deep?' 심화 모드':''} ${pct}점, 내 등급은 "${g.name}" (${d.deep?'심화 ':''}${g.badge})! 당신의 과실 판단력은?`;
     try{if(navigator.share){await navigator.share({title:'몇 대 몇? 과실비율 퀴즈',text,url});return;}}catch(err){if(err&&err.name==='AbortError')return;}
     try{await navigator.clipboard.writeText(text+'\n'+url);$('qShareMsg').innerHTML='<div class="msg">링크를 복사했어요. 카톡에 붙여넣으면 등급 카드가 함께 보여요.</div>';}
     catch(_){const mm=$('qShareMsg');mm.innerHTML='<div class="msg"></div>';mm.firstChild.textContent=text+' '+url;}};
@@ -1438,11 +1462,12 @@ function renderAdmin(){
 }
 
 /* ========== 시작 ========== */
-window.__fs={Q,normalize,judge,buildScene,play}; // 테스트용 훅
+window.__fs={Q,QD,normalize,judge,buildScene,play}; // 테스트용 훅
 capsPromise=initCaps();
+document.querySelectorAll('#qMode button').forEach(b=>b.onclick=()=>{const d=b.dataset.q==='deep';if(d!==quiz.deep||quiz.single||quiz.i>=quiz.order.length){setQuizMode(d);window.scrollTo({top:0,behavior:'smooth'});}});
 $('qAll').onclick=()=>{showBank();window.scrollTo({top:0,behavior:'smooth'});};
 {const qp=new URLSearchParams(location.search);if(qp.get('from')==='share'){const g=qp.get('g');track('share_visit',GRADES.some(x=>x.slug===g)?g:undefined);}
-  const qi=Q.findIndex(x=>x.id===qp.get('q'));
-  if(qi>=0){const fv=parseInt(qp.get('f'),10),f=fv>=0&&fv<=100&&fv%10===0?fv:null;track('qshare_visit',null,Q[qi].id);quizSingle(qi,f);}
+  const qid=qp.get('q'),pool=qid&&qid[0]==='d'?QD:Q,qi=pool.findIndex(x=>x.id===qid);
+  if(qi>=0){const fv=parseInt(qp.get('f'),10),f=fv>=0&&fv<=100&&fv%10===0?fv:null;track('qshare_visit',null,pool[qi].id);quizSingle(qi,f,false,pool);}
   else quizStart();}
 })();

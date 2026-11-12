@@ -151,3 +151,7 @@ details.stddet summary{cursor:pointer;font-size:13px;font-weight:700}
 .lastbar{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px 14px;margin:14px 0 10px;font:700 13px 'Noto Sans KR';color:var(--ink);cursor:pointer}
 .wrongs{margin-top:16px}
 .wrow{display:flex;align-items:center;gap:10px}.wrow>div{flex:1;min-width:0}.wrow .ctext{margin-top:0}
+
+.qmode{margin-bottom:12px}
+.btn.deep{background:#ff4a4f;margin-top:10px}
+.deephint{font-size:12px;color:var(--sub);text-align:center;margin:6px 0 0}

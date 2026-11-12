@@ -30,6 +30,12 @@ jobs:
           mkdir _site
           cp -r index.html CNAME css js og q r _site/
           ls _site
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # 배포본 js만 난독화 (레포 원본은 그대로). 설정 설명은 tools/obfuscate.sh
+      - name: Obfuscate js
+        run: bash tools/obfuscate.sh _site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

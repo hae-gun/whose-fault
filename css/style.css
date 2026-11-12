@@ -191,3 +191,12 @@ details.stddet summary{cursor:pointer;font-size:13px;font-weight:700}
 .hotitem .hi{flex:1;min-width:0}.hotitem .t{font-weight:800;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hotitem .m{font-size:11px;color:var(--sub);margin-top:3px}.hotitem .go{color:var(--sub);font-weight:700}
 @media (prefers-reduced-motion:reduce){.hot,.now::before,.fire{animation:none}}
+
+/* 가로로 넓은 화면(PC): 왼쪽에 시뮬레이션을 고정하고 오른쪽에 문제와 답을 둔다. 스크롤 없이 보면서 고를 수 있게 */
+@media (min-width:960px) and (min-aspect-ratio:1/1){
+  .app{--sw:min(640px,calc(100vh - 150px),56vw);max-width:calc(var(--sw) + 520px);display:grid;grid-template-columns:var(--sw) minmax(380px,1fr);column-gap:24px;align-items:start}
+  .app>header,.app>.tabs{grid-column:1/-1}
+  .app>.stage{grid-column:1;grid-row:3/span 20;position:sticky;top:14px}
+  .app>section,.app>.foot{grid-column:2;min-width:0}
+  .app>section>:first-child{margin-top:0}
+}

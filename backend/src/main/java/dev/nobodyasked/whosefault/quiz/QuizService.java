@@ -49,7 +49,7 @@ public class QuizService {
     @Transactional
     public void saveResult(String uid, Integer score, String grade, List<Answer> answers) {
         if (score == null || score < 0 || score > 100) throw ApiException.badRequest("invalid_score", "점수가 올바르지 않아요.");
-        if (!GRADES.contains(grade)) throw ApiException.badRequest("invalid_grade", "등급이 올바르지 않아요.");
+        if (grade == null || !GRADES.contains(grade)) throw ApiException.badRequest("invalid_grade", "등급이 올바르지 않아요.");
         List<Answer> list = answers == null ? List.of() : answers;
         if (list.size() > 20) throw ApiException.badRequest("too_many_answers", "답이 너무 많아요.");
         for (Answer a : list) {
@@ -66,8 +66,9 @@ public class QuizService {
     }
 
     public void event(String uid, String kind, String grade, String qid) {
-        if (!EVENT_KINDS.contains(kind)) throw ApiException.badRequest("invalid_kind", "알 수 없는 이벤트예요.");
-        String g = GRADES.contains(grade) ? grade : null;
+        if (kind == null || !EVENT_KINDS.contains(kind)) throw ApiException.badRequest("invalid_kind", "알 수 없는 이벤트예요.");
+        // Set.of는 contains(null)에서 예외를 던진다. 등급 없는 이벤트(quiz_start, qshare_*)가 500으로 버려지던 원인
+        String g = grade != null && GRADES.contains(grade) ? grade : null;
         String q = qid != null && QID.matcher(qid).matches() ? qid : null;
         if (kind.startsWith("qshare_") && q == null) throw ApiException.badRequest("invalid_qid", "문제 번호가 올바르지 않아요.");
         if (!limiter.tryAcquire("event:" + uid, 60, 3_600_000)) return; // 넘치면 조용히 버린다

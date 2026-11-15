@@ -27,7 +27,7 @@ public class ReportService {
     }
 
     public void report(String uid, String kind, String targetId, String reason) {
-        if (!REASONS.contains(reason)) throw ApiException.badRequest("invalid_reason", "신고 사유를 골라주세요.");
+        if (reason == null || !REASONS.contains(reason)) throw ApiException.badRequest("invalid_reason", "신고 사유를 골라주세요.");
         if (!Ids.valid(targetId)) throw ApiException.notFound("신고 대상");
         String caseId;
         if ("case".equals(kind)) {
